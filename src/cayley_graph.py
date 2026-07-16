@@ -39,20 +39,21 @@ def draw_graph(graph, layout, filename) :
     plt.savefig(filename)
     plt.close()
 
-n = 5
-generators = {1, -1}
+if __name__ == "__main__" :
+    n = 5
+    generators = {1, -1}
 
-cyclic = create_cyclic_cayley_graph(n, generators)
+    cyclic = create_cyclic_cayley_graph(n, generators)
 
-print_graph_info(cyclic)
-draw_graph(cyclic, "circular", "cyclic_graph.png")
+    print_graph_info(cyclic)
+    draw_graph(cyclic, "circular", "cyclic_graph.png")
 
-print()
+    print()
 
-n = 8
-generators = {2, -2}
+    n = 8
+    generators = {2, -2}
 
-test_graph = create_cyclic_cayley_graph(n, generators)
+    test_graph = create_cyclic_cayley_graph(n, generators)
 
-print_graph_info(test_graph)
-draw_graph(test_graph, "spring", "test_graph.png")
+    print_graph_info(test_graph)
+    draw_graph(test_graph, "spring", "test_graph.png")
