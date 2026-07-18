@@ -2,6 +2,7 @@ import networkx as nx
 from src.cayley_graph import create_cyclic_cayley_graph
 import pytest
 from src.cayley_graph import draw_graph
+from src.metrics import compute_basic_metrics
 
 def test_rejects_zero_n():
     
