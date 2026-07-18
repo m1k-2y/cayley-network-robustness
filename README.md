@@ -13,6 +13,7 @@ This project explores network's structural properties by compare Cayley graph an
 - Draw graphs using circular or spring layouts
 - Validate behavior with pytest
 - Compute basic graph metrics, including connectivity, diameter, giant component ratio, and average shortest path length
+- Generate Erdős–Rényi random baseline graphs with configurable edge probability and random seed
 
 ## Project Structure
 
@@ -20,9 +21,11 @@ This project explores network's structural properties by compare Cayley graph an
 .
 ├── src/
 │   ├── __init__.py
+|   ├── baseline_graphs.py
 │   ├── cayley_graph.py
 │   └── metrics.py
 ├── tests/
+|   ├── test_baseline_graphs.py 
 │   ├── test_cayley_graph.py
 │   └── test_metrics.py
 └── README.md
