@@ -12,6 +12,7 @@ This project explores network's structural properties by compare Cayley graph an
 - Print basic graph information
 - Draw graphs using circular or spring layouts
 - Validate behavior with pytest
+- Compute basic graph metrics, including connectivity, diameter, giant component ratio, and average shortest path length
 
 ## Project Structure
 
@@ -19,9 +20,11 @@ This project explores network's structural properties by compare Cayley graph an
 .
 ├── src/
 │   ├── __init__.py
-│   └── cayley_graph.py
+│   ├── cayley_graph.py
+│   └── metrics.py
 ├── tests/
-│   └── test_cayley_graph.py
+│   ├── test_cayley_graph.py
+│   └── test_metrics.py
 └── README.md
 ```
 
