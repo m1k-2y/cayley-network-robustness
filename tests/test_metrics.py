@@ -16,6 +16,7 @@ def test_compute_basic_metrics_for_connected_cyclic_cayley_graph():
     assert metrics["is_connected"]
     assert metrics["num_components"] == 1
     assert metrics["average_degree"] == 2.0
+    assert metrics["diameter"] == 2
 
 def test_compute_basic_metrics_for_empty_graph():
 
@@ -28,6 +29,7 @@ def test_compute_basic_metrics_for_empty_graph():
     assert not metrics["is_connected"] 
     assert metrics["num_components"] == 0
     assert metrics["average_degree"] == 0.0
+    assert metrics["diameter"] is None
 
 def test_compute_basic_metrics_for_disconnected_cyclic_cayley_graph():
 
@@ -43,3 +45,4 @@ def test_compute_basic_metrics_for_disconnected_cyclic_cayley_graph():
     assert not metrics["is_connected"]
     assert metrics["num_components"] == 2
     assert metrics["average_degree"] == 2.0
+    assert metrics["diameter"] is None
