@@ -51,13 +51,13 @@ def compute_average_shortest_path_length(
 def compute_basic_metrics(
     graph: nx.Graph,
 ) -> dict:
-    '''Return graph's basic metrics by computing.'''
+    '''Compute and return graph's basic metrics.'''
 
     num_nodes = graph.number_of_nodes()
 
     if num_nodes == 0:
         
-        info = {
+        return {
             "num_nodes": 0,
             "num_edges": 0,
             "is_connected": False,
@@ -68,24 +68,22 @@ def compute_basic_metrics(
             "average_shortest_path_length": None,
         }
     
-    else:
+    info = {}
+
+    info["num_nodes"] = num_nodes
+    info["num_edges"] = graph.number_of_edges()
+    info["is_connected"] = nx.is_connected(graph)
+    info["num_components"] = nx.number_connected_components(graph)
+
+    degrees = 0
+
+    for _, degree in graph.degree():
+        degrees += degree
         
-        info = {}
+    info["average_degree"] = degrees / num_nodes
 
-        info["num_nodes"] = num_nodes
-        info["num_edges"] = graph.number_of_edges()
-        info["is_connected"] = nx.is_connected(graph)
-        info["num_components"] = nx.number_connected_components(graph)
-
-        degrees = 0
-
-        for _, degree in graph.degree():
-            degrees += degree
-        
-        info["average_degree"] = degrees / num_nodes
-
-        info["diameter"] = compute_diameter(graph)
-        info["giant_component_ratio"] = compute_giant_component_ratio(graph)
-        info["average_shortest_path_length"] = compute_average_shortest_path_length(graph)
+    info["diameter"] = compute_diameter(graph)
+    info["giant_component_ratio"] = compute_giant_component_ratio(graph)
+    info["average_shortest_path_length"] = compute_average_shortest_path_length(graph)
 
     return info
