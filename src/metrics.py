@@ -33,6 +33,21 @@ def compute_giant_component_ratio(
     
     return largest_component_size / num_nodes
 
+def compute_average_shortest_path_length(
+    graph: nx.Graph,
+) -> float | None:
+    '''Compute and return average shortest path length'''
+    
+    num_nodes = graph.number_of_nodes()
+
+    if num_nodes == 0:
+        return None
+    
+    if not nx.is_connected(graph):
+        return None
+    
+    return nx.average_shortest_path_length(graph)
+
 def compute_basic_metrics(
     graph: nx.Graph,
 ) -> dict:
@@ -50,6 +65,7 @@ def compute_basic_metrics(
             "average_degree": 0.0,
             "diameter": None,
             "giant_component_ratio": 0.0,
+            "average_shortest_path_length": None,
         }
     
     else:
@@ -70,5 +86,6 @@ def compute_basic_metrics(
 
         info["diameter"] = compute_diameter(graph)
         info["giant_component_ratio"] = compute_giant_component_ratio(graph)
-        
+        info["average_shortest_path_length"] = compute_average_shortest_path_length(graph)
+
     return info
