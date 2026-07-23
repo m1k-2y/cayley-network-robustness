@@ -3,6 +3,7 @@ import networkx as nx
 import pytest
 from src.baseline_graphs import create_barabasi_albert_graph
 from src.baseline_graphs import create_watts_strogatz_graph
+from src.baseline_graphs import create_random_regular_graph
 
 def test_erdos_renyi_graph_has_no_edges_when_p_is_zero():
 
@@ -160,3 +161,51 @@ def test_watts_strogatz_graph_rejects_invalid_probability():
 
     with pytest.raises(ValueError):
         create_watts_strogatz_graph(n, k, p)
+
+def test_random_regular_graph_has_expected_nodes_edges_and_degrees():
+
+    n = 10
+    d = 4
+
+    graph = create_random_regular_graph(n, d)
+
+    assert graph.number_of_nodes() == 10
+    assert graph.number_of_edges() == 20
+    
+    for _, degree in graph.degree():
+        assert degree == 4
+
+def test_random_regular_graph_is_reproducible_with_same_seed():
+
+    n = 10
+    d = 4
+    seed = 42
+
+    graph1 = create_random_regular_graph(n, d, seed)
+    graph2 = create_random_regular_graph(n, d, seed)
+
+    assert set(graph1.edges()) == set(graph2.edges())
+
+def test_random_regular_graph_rejects_non_positive_n():
+
+    n = -1
+    d = 4
+
+    with pytest.raises(ValueError):
+        create_random_regular_graph(n, d)
+
+def test_random_regular_graph_rejects_invalid_degree_range():
+
+    n = 10
+    d = -1
+
+    with pytest.raises(ValueError):
+        create_random_regular_graph(n, d)
+
+def test_random_regular_graph_rejects_odd_degree_sum():
+
+    n = 11
+    d  = 5
+
+    with pytest.raises(ValueError):
+        create_random_regular_graph(n, d)

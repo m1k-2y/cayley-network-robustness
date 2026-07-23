@@ -43,7 +43,8 @@ def create_watts_strogatz_graph(
     p: float,
     seed: int | None = None,
 ) -> nx.Graph:
-    
+    '''Create a Watts–Strogatz graph with n nodes, connecting each node to k nearest neighbors and rewiring edges with probability p.'''
+
     if n <= 0:
         raise ValueError("n must be bigger than 0.")
     
@@ -57,5 +58,25 @@ def create_watts_strogatz_graph(
         raise ValueError("p must be between 0 to 1.")
     
     graph = nx.watts_strogatz_graph(n=n, k=k, p=p, seed=seed)
+
+    return graph
+
+def create_random_regular_graph(
+    n: int, 
+    d: int, 
+    seed: int | None = None,
+) -> nx.Graph:
+    '''Create a random d-regular graph with n nodes.'''
+    
+    if n <= 0:
+        raise ValueError("n must be bigger than 0.")
+    
+    if not 0 <= d < n:
+        raise ValueError("d must be between 0 to n.") 
+    
+    if (n * d) % 2 != 0:
+        raise ValueError("n * d must be even number.")
+
+    graph = nx.random_regular_graph(d, n, seed)
 
     return graph
