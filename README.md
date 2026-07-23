@@ -17,6 +17,7 @@ This project explores network's structural properties by compare Cayley graph an
 - Barabási–Albert baseline graph generation with seed reproducibility and input validation
 - Watts–Strogatz small-world graph generation with configurable `n`, `k`, `p`, and `seed`
 - Random regular graph generation with configurable n, d, and seed
+- 2D lattice graph generation with configurable rows and columns
 
 ## Project Structure
 

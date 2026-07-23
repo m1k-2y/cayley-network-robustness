@@ -80,3 +80,19 @@ def create_random_regular_graph(
     graph = nx.random_regular_graph(d, n, seed)
 
     return graph
+
+def create_2d_lattice_graph(
+    rows: int,
+    cols: int,
+) -> nx.Graph:
+    '''Create a 2D-Lattice graph with rows x cols.'''
+
+    if rows <= 0:
+        raise ValueError("rows must be bigger than 0.")
+
+    if cols <= 0:
+        raise ValueError("cols must be bigger than 0.")
+
+    graph = nx.grid_2d_graph(rows, cols)
+
+    return graph

@@ -4,6 +4,7 @@ import pytest
 from src.baseline_graphs import create_barabasi_albert_graph
 from src.baseline_graphs import create_watts_strogatz_graph
 from src.baseline_graphs import create_random_regular_graph
+from src.baseline_graphs import create_2d_lattice_graph
 
 def test_erdos_renyi_graph_has_no_edges_when_p_is_zero():
 
@@ -209,3 +210,55 @@ def test_random_regular_graph_rejects_odd_degree_sum():
 
     with pytest.raises(ValueError):
         create_random_regular_graph(n, d)
+
+def test_2d_lattice_graph_has_expected_nodes_and_edges():
+
+    rows = 3
+    cols = 4
+
+    graph = create_2d_lattice_graph(rows, cols)
+
+    assert graph.number_of_nodes() == 12
+    assert graph.number_of_edges() == 17
+
+def test_2d_lattice_graph_has_expected_node_coordinates():
+
+    rows = 3
+    cols = 4
+
+    nodes = set()
+
+    graph = create_2d_lattice_graph(rows, cols)
+
+    for x in range(rows):
+        for y in range(cols):
+            nodes.add((x, y))
+
+    assert nodes == set(graph.nodes())
+
+def test_2d_lattice_graph_has_expected_node_degrees():
+
+    rows = 3
+    cols = 4
+
+    graph = create_2d_lattice_graph(rows, cols)
+
+    assert graph.degree((0, 0)) == 2
+    assert graph.degree((0, 1)) == 3
+    assert graph.degree((1, 1)) == 4
+
+def test_2d_lattice_graph_rejects_non_positive_rows():
+
+    rows = -1
+    cols = 4
+
+    with pytest.raises(ValueError):
+        create_2d_lattice_graph(rows, cols)
+
+def test_2d_lattice_graph_rejects_non_positive_cols():
+
+    rows = 3
+    cols = -1
+
+    with pytest.raises(ValueError):
+        create_2d_lattice_graph(rows, cols)
