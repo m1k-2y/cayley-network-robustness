@@ -14,6 +14,7 @@ This project explores network's structural properties by compare Cayley graph an
 - Validate behavior with pytest
 - Compute basic graph metrics, including connectivity, diameter, giant component ratio, and average shortest path length
 - Generate Erdős–Rényi random baseline graphs with configurable edge probability and random seed
+- Barabási–Albert baseline graph generation with seed reproducibility and input validation
 
 ## Project Structure
 
