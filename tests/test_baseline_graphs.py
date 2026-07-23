@@ -2,6 +2,7 @@ from src.baseline_graphs import create_erdos_renyi_graph
 import networkx as nx
 import pytest
 from src.baseline_graphs import create_barabasi_albert_graph
+from src.baseline_graphs import create_watts_strogatz_graph
 
 def test_erdos_renyi_graph_has_no_edges_when_p_is_zero():
 
@@ -100,3 +101,62 @@ def test_barabasi_albert_graph_rejects_m_not_smaller_than_n():
 
     with pytest.raises(ValueError):
         create_barabasi_albert_graph(n, m)
+
+def test_watts_strogatz_graph_has_expected_nodes_and_edges():
+
+    n = 10
+    k = 4
+    p = 0
+
+    graph = create_watts_strogatz_graph(n, k, p)
+
+    assert graph.number_of_nodes() == 10
+    assert graph.number_of_edges() == 20
+
+def test_watts_strogatz_graph_same_seed_is_reproducible():
+
+    n = 20
+    k = 4
+    p = 0.3
+    seed = 42
+
+    graph1 = create_watts_strogatz_graph(n, k, p, seed)
+    graph2 = create_watts_strogatz_graph(n, k, p, seed)
+
+    assert set(graph1.edges()) == set(graph2.edges())
+
+def test_watts_strogatz_graph_rejects_non_positive_n():
+
+    n = 0
+    k = 4
+    p = 0.4
+
+    with pytest.raises(ValueError):
+        create_watts_strogatz_graph(n, k, p)
+
+def test_watts_strogatz_graph_rejects_invalid_k_range():
+
+    n = 10
+    k = 0
+    p = 0.4
+
+    with pytest.raises(ValueError):
+        create_watts_strogatz_graph(n, k, p)
+
+def test_watts_strogatz_graph_rejects_odd_k():
+
+    n = 10
+    k = 3
+    p = 0.4
+
+    with pytest.raises(ValueError):
+        create_watts_strogatz_graph(n, k, p)
+
+def test_watts_strogatz_graph_rejects_invalid_probability():
+
+    n = 10
+    k = 4
+    p = 1.1
+
+    with pytest.raises(ValueError):
+        create_watts_strogatz_graph(n, k, p)

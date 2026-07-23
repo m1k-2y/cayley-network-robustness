@@ -22,7 +22,7 @@ def create_barabasi_albert_graph(
     m: int,
     seed: int | None = None,
 ) -> nx.Graph:
-    '''"""Create a Barabási–Albert graph with n nodes, attaching each new node to m existing nodes."""'''
+    '''Create a Barabási–Albert graph with n nodes, attaching each new node to m existing nodes.'''
     
     if n <= 0:
         raise ValueError("n must be bigger than 0.")
@@ -34,5 +34,28 @@ def create_barabasi_albert_graph(
         raise ValueError("n must be bigger than m.")
     
     graph = nx.barabasi_albert_graph(n=n, m=m, seed=seed)
+
+    return graph
+
+def create_watts_strogatz_graph(
+    n: int,
+    k: int,
+    p: float,
+    seed: int | None = None,
+) -> nx.Graph:
+    
+    if n <= 0:
+        raise ValueError("n must be bigger than 0.")
+    
+    if not (0 < k and k < n):
+        raise ValueError("k must satisfy 0 < k < n.")
+    
+    if k % 2 != 0:
+        raise ValueError("k must be even number.")
+    
+    if not (0 <= p and p <= 1):
+        raise ValueError("p must be between 0 to 1.")
+    
+    graph = nx.watts_strogatz_graph(n=n, k=k, p=p, seed=seed)
 
     return graph
