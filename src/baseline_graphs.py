@@ -96,3 +96,15 @@ def create_2d_lattice_graph(
     graph = nx.grid_2d_graph(rows, cols)
 
     return graph
+
+def create_hypercube_graph(
+    dimension: int,
+) -> nx.Graph:
+    '''Create d-dimension Hypercube graph.'''
+
+    if dimension <= 0:
+        raise ValueError("dimension must be bigger than 0.")
+
+    graph = nx.hypercube_graph(dimension)
+
+    return graph

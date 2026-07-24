@@ -5,6 +5,7 @@ from src.baseline_graphs import create_barabasi_albert_graph
 from src.baseline_graphs import create_watts_strogatz_graph
 from src.baseline_graphs import create_random_regular_graph
 from src.baseline_graphs import create_2d_lattice_graph
+from src.baseline_graphs import create_hypercube_graph
 
 def test_erdos_renyi_graph_has_no_edges_when_p_is_zero():
 
@@ -262,3 +263,33 @@ def test_2d_lattice_graph_rejects_non_positive_cols():
 
     with pytest.raises(ValueError):
         create_2d_lattice_graph(rows, cols)
+
+def test_hypercube_graph_has_expected_nodes_edges_and_degrees():
+
+    dimension = 4
+
+    graph = create_hypercube_graph(dimension)
+
+    assert graph.number_of_nodes() == 2 ** dimension
+    assert graph.number_of_edges() == (2 ** (dimension - 1)) * dimension
+
+    for _, degree in graph.degree():
+        assert degree == dimension
+
+def test_hypercube_graph_has_expected_binary_tuple_nodes():
+
+    dimension = 3
+
+    graph = create_hypercube_graph(dimension)
+
+    for node in graph.nodes():
+        assert len(node) == dimension
+        for bit in node:
+            assert bit == 0 or bit == 1
+
+def test_hypercube_graph_rejects_non_positive_dimension():
+
+    dimension = -1
+
+    with pytest.raises(ValueError):
+        create_hypercube_graph(dimension)

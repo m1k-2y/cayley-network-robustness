@@ -18,6 +18,7 @@ This project explores network's structural properties by compare Cayley graph an
 - Watts–Strogatz small-world graph generation with configurable `n`, `k`, `p`, and `seed`
 - Random regular graph generation with configurable n, d, and seed
 - 2D lattice graph generation with configurable rows and columns
+- Hypercube graph generation with configurable dimension
 
 ## Project Structure
 
