@@ -15,7 +15,7 @@ def compute_diameter(
 def compute_giant_component_ratio(
     graph: nx.Graph,
 ) -> float:
-    '''Compute and return ratio of giant component.'''
+    '''Compute the giant component ratio relative to the current graph size.'''
 
     num_nodes = graph.number_of_nodes()
 

@@ -20,6 +20,7 @@ def measure_attack_step(
     removed_fraction: float,
     removed_item: Hashable | None = None,
 ) -> AttackStep:
+    '''Measure one attack step relative to the initial graph size.'''
 
     step : AttackStep = {}
 
