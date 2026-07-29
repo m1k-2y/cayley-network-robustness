@@ -2,7 +2,7 @@
 from typing import TypedDict
 from _collections_abc import Hashable
 import networkx as nx
-from src.metrics import compute_giant_component_ratio
+import random
 
 class AttackStep(TypedDict):
     removed_fraction: float
@@ -39,3 +39,25 @@ def measure_attack_step(
     step['removed_item'] = removed_item  
 
     return step  
+
+def simulate_random_node_failure(
+    graph: nx.Graph,
+) -> AttackHistory:
+    '''Randomly remove nodes from a graph copy and record each attack step.'''
+
+    initial_node_count = graph.number_of_nodes()
+    working_graph = graph.copy()
+    history : AttackHistory = []
+
+    while working_graph.number_of_nodes() > 0:
+       removed_node = random.choice(list(working_graph.nodes))
+       working_graph.remove_node(removed_node)
+
+       removed_fraction = (initial_node_count - working_graph.number_of_nodes()) / initial_node_count
+       removed_item = removed_node
+
+       step = measure_attack_step(working_graph, initial_node_count, removed_fraction, removed_item)
+
+       history.append(step)
+
+    return history

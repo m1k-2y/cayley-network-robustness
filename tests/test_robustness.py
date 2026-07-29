@@ -1,5 +1,6 @@
 import networkx as nx
 from src.robustness import measure_attack_step
+from src.robustness import simulate_random_node_failure
 
 def test_measure_attack_step_connected_graph():
 
@@ -71,3 +72,21 @@ def test_measure_attack_step_single_node_graph():
     assert step['giant_component_size'] == 1
     assert step['giant_component_ratio'] == 0.25
     assert step['removed_item'] == removed_item
+
+def test_simulate_random_node_failure_basic():
+
+    graph = nx.path_graph(4)
+
+    history = simulate_random_node_failure(graph)
+
+    assert len(history) == 4
+    assert history[len(history) - 1]['remaining_nodes'] == 0
+    assert history[len(history) - 1]['removed_fraction'] == 1.0
+
+    removed_items = []
+    for step in history:
+        removed_items.append(step['removed_item'])
+
+    assert set(graph.nodes) == set(removed_items)
+
+    assert graph.number_of_nodes() == 4
