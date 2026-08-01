@@ -10,17 +10,33 @@ def create_cyclic_cayley_graph(
     if n <= 0:
         raise ValueError("n must be positive")
     
+    normalized_classes = set()
+
     for generator in generators:
         if generator % n == 0:
             raise ValueError("generators must not create self-loops")
+
+        c = min(generator % n, (-generator) % n)
+        normalized_classes.add(c)
 
     graph = nx.Graph()
     graph.add_nodes_from(range(n))
 
     for generator in generators:
+        c = min(generator % n, -generator % n)
+        edge_class = f"step_{c}"
         for u in range(n):
             v = (u + generator) % n
-            graph.add_edge(u, v)
+            graph.add_edge(u, v, edge_class = edge_class)
+    
+    edge_classes = tuple(
+        f"step_{c}"
+        for c in sorted(normalized_classes)
+    )
+
+    graph.graph["family"] = "cyclic"
+    graph.graph["generators"] = tuple(sorted(generators))
+    graph.graph["edge_classes"] = edge_classes
 
     return graph
 
