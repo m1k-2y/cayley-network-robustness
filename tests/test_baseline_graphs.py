@@ -6,6 +6,7 @@ from src.baseline_graphs import create_watts_strogatz_graph
 from src.baseline_graphs import create_random_regular_graph
 from src.baseline_graphs import create_2d_lattice_graph
 from src.baseline_graphs import create_hypercube_graph
+from src.baseline_graphs import create_2d_torus_graph
 
 def test_erdos_renyi_graph_has_no_edges_when_p_is_zero():
 
@@ -293,3 +294,108 @@ def test_hypercube_graph_rejects_non_positive_dimension():
 
     with pytest.raises(ValueError):
         create_hypercube_graph(dimension)
+
+def test_create_2d_torus_graph_3x3_basic_properties():
+
+    rows = 3
+    cols = 3
+
+    graph = create_2d_torus_graph(rows, cols)
+
+    assert graph.number_of_nodes() == 9
+    assert graph.number_of_edges() == 18
+
+    for _, degree in graph.degree():
+        assert degree == 4
+    
+    assert nx.is_connected(graph)
+
+def test_create_2d_torus_graph_16x16_size_and_degree():
+
+    rows = 16
+    cols = 16
+
+    graph = create_2d_torus_graph(rows, cols)
+
+    assert graph.number_of_nodes() == 256
+    assert graph.number_of_edges() == 512
+
+    for _, degree in graph.degree():
+        assert degree == 4
+
+def test_create_2d_torus_graph_16x16_edge_class_counts():
+
+    rows = 16
+    cols = 16
+
+    graph = create_2d_torus_graph(rows, cols)
+
+    h = 0
+    v = 0
+
+    for _, _, data in graph.edges(data = True):
+        if data["edge_class"] == "horizontal":
+            h += 1
+        
+        elif data["edge_class"] == "vertical":
+            v += 1
+    
+    assert h == 256
+    assert v == 256
+
+    assert h + v == graph.number_of_edges()
+
+def test_create_2d_torus_graph_16x16_diameter():
+
+    rows = 16
+    cols = 16
+
+    graph = create_2d_torus_graph(rows, cols)
+
+    assert nx.diameter(graph) == 16
+
+def test_create_2d_torus_graph_rejects_dimensions_below_3():
+
+    rows1 = 2
+    cols1 = 3
+
+    with pytest.raises(ValueError):
+        create_2d_torus_graph(rows1, cols1)
+    
+    rows2 = 3
+    cols2 = 2
+
+    with pytest.raises(ValueError):
+        create_2d_torus_graph(rows2, cols2)
+    
+    rows3 = 1
+    cols3 = 3
+
+    with pytest.raises(ValueError):
+        create_2d_torus_graph(rows3, cols3)
+
+def test_create_2d_torus_graph_16x16_node_zero_neighbors():
+
+    rows = 16
+    cols = 16
+
+    graph = create_2d_torus_graph(rows, cols)
+
+    assert set(graph.neighbors(0)) == {1, 15, 16, 240}
+
+def test_create_2d_torus_graph_removing_horizontal_edges_creates_16_components():
+
+    rows = 16
+    cols = 16
+
+    graph = create_2d_torus_graph(rows, cols)
+
+    horizontal_edges = []
+
+    for u, v, data in graph.edges(data = True):
+        if data["edge_class"] == "horizontal":
+            horizontal_edges.append((u, v))
+    
+    graph.remove_edges_from(horizontal_edges)
+
+    assert nx.number_connected_components(graph) == 16
