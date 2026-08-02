@@ -108,3 +108,35 @@ def create_hypercube_graph(
     graph = nx.hypercube_graph(dimension)
 
     return graph
+
+def create_2d_torus_graph(
+    rows: int,
+    cols: int,
+) -> nx.Graph:
+    """Create a two-dimensional torus graph with integer node labels."""
+
+    if rows < 3 or cols < 3:
+        raise ValueError("rows and cols must both be at least 3")
+    
+    graph = nx.Graph()
+
+    for row in range(rows):
+        for col in range(cols):
+            graph.add_node(row * cols + col)
+
+    
+    for row in range(rows):
+        for col in range(cols):
+            u = row * cols + col
+            right = row * cols + (col + 1) % cols
+            down = ((row + 1) % rows) * cols + col
+
+            graph.add_edge(u, right, edge_class = "horizontal")
+            graph.add_edge(u, down, edge_class = "vertical")
+    
+    graph.graph["family"] = "2d_torus"
+    graph.graph["rows"] = rows
+    graph.graph["cols"] = cols
+    graph.graph["edge_classes"] = ("horizontal", "vertical")
+
+    return graph
