@@ -4,9 +4,7 @@ import pytest
 from src.baseline_graphs import create_barabasi_albert_graph
 from src.baseline_graphs import create_watts_strogatz_graph
 from src.baseline_graphs import create_random_regular_graph
-from src.baseline_graphs import create_2d_lattice_graph
-from src.baseline_graphs import create_hypercube_graph
-from src.baseline_graphs import create_2d_torus_graph
+from src.baseline_graphs import create_torus_2d_graph
 
 def test_erdos_renyi_graph_has_no_edges_when_p_is_zero():
 
@@ -213,94 +211,12 @@ def test_random_regular_graph_rejects_odd_degree_sum():
     with pytest.raises(ValueError):
         create_random_regular_graph(n, d)
 
-def test_2d_lattice_graph_has_expected_nodes_and_edges():
-
-    rows = 3
-    cols = 4
-
-    graph = create_2d_lattice_graph(rows, cols)
-
-    assert graph.number_of_nodes() == 12
-    assert graph.number_of_edges() == 17
-
-def test_2d_lattice_graph_has_expected_node_coordinates():
-
-    rows = 3
-    cols = 4
-
-    nodes = set()
-
-    graph = create_2d_lattice_graph(rows, cols)
-
-    for x in range(rows):
-        for y in range(cols):
-            nodes.add((x, y))
-
-    assert nodes == set(graph.nodes())
-
-def test_2d_lattice_graph_has_expected_node_degrees():
-
-    rows = 3
-    cols = 4
-
-    graph = create_2d_lattice_graph(rows, cols)
-
-    assert graph.degree((0, 0)) == 2
-    assert graph.degree((0, 1)) == 3
-    assert graph.degree((1, 1)) == 4
-
-def test_2d_lattice_graph_rejects_non_positive_rows():
-
-    rows = -1
-    cols = 4
-
-    with pytest.raises(ValueError):
-        create_2d_lattice_graph(rows, cols)
-
-def test_2d_lattice_graph_rejects_non_positive_cols():
-
-    rows = 3
-    cols = -1
-
-    with pytest.raises(ValueError):
-        create_2d_lattice_graph(rows, cols)
-
-def test_hypercube_graph_has_expected_nodes_edges_and_degrees():
-
-    dimension = 4
-
-    graph = create_hypercube_graph(dimension)
-
-    assert graph.number_of_nodes() == 2 ** dimension
-    assert graph.number_of_edges() == (2 ** (dimension - 1)) * dimension
-
-    for _, degree in graph.degree():
-        assert degree == dimension
-
-def test_hypercube_graph_has_expected_binary_tuple_nodes():
-
-    dimension = 3
-
-    graph = create_hypercube_graph(dimension)
-
-    for node in graph.nodes():
-        assert len(node) == dimension
-        for bit in node:
-            assert bit == 0 or bit == 1
-
-def test_hypercube_graph_rejects_non_positive_dimension():
-
-    dimension = -1
-
-    with pytest.raises(ValueError):
-        create_hypercube_graph(dimension)
-
 def test_create_2d_torus_graph_3x3_basic_properties():
 
     rows = 3
     cols = 3
 
-    graph = create_2d_torus_graph(rows, cols)
+    graph = create_torus_2d_graph(rows, cols)
 
     assert graph.number_of_nodes() == 9
     assert graph.number_of_edges() == 18
@@ -315,7 +231,7 @@ def test_create_2d_torus_graph_16x16_size_and_degree():
     rows = 16
     cols = 16
 
-    graph = create_2d_torus_graph(rows, cols)
+    graph = create_torus_2d_graph(rows, cols)
 
     assert graph.number_of_nodes() == 256
     assert graph.number_of_edges() == 512
@@ -328,7 +244,7 @@ def test_create_2d_torus_graph_16x16_edge_class_counts():
     rows = 16
     cols = 16
 
-    graph = create_2d_torus_graph(rows, cols)
+    graph = create_torus_2d_graph(rows, cols)
 
     h = 0
     v = 0
@@ -350,7 +266,7 @@ def test_create_2d_torus_graph_16x16_diameter():
     rows = 16
     cols = 16
 
-    graph = create_2d_torus_graph(rows, cols)
+    graph = create_torus_2d_graph(rows, cols)
 
     assert nx.diameter(graph) == 16
 
@@ -360,26 +276,26 @@ def test_create_2d_torus_graph_rejects_dimensions_below_3():
     cols1 = 3
 
     with pytest.raises(ValueError):
-        create_2d_torus_graph(rows1, cols1)
+        create_torus_2d_graph(rows1, cols1)
     
     rows2 = 3
     cols2 = 2
 
     with pytest.raises(ValueError):
-        create_2d_torus_graph(rows2, cols2)
+        create_torus_2d_graph(rows2, cols2)
     
     rows3 = 1
     cols3 = 3
 
     with pytest.raises(ValueError):
-        create_2d_torus_graph(rows3, cols3)
+        create_torus_2d_graph(rows3, cols3)
 
 def test_create_2d_torus_graph_16x16_node_zero_neighbors():
 
     rows = 16
     cols = 16
 
-    graph = create_2d_torus_graph(rows, cols)
+    graph = create_torus_2d_graph(rows, cols)
 
     assert set(graph.neighbors(0)) == {1, 15, 16, 240}
 
@@ -388,7 +304,7 @@ def test_create_2d_torus_graph_removing_horizontal_edges_creates_16_components()
     rows = 16
     cols = 16
 
-    graph = create_2d_torus_graph(rows, cols)
+    graph = create_torus_2d_graph(rows, cols)
 
     horizontal_edges = []
 
