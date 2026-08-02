@@ -81,35 +81,7 @@ def create_random_regular_graph(
 
     return graph
 
-def create_2d_lattice_graph(
-    rows: int,
-    cols: int,
-) -> nx.Graph:
-    '''Create a 2D-Lattice graph with rows x cols.'''
-
-    if rows <= 0:
-        raise ValueError("rows must be bigger than 0.")
-
-    if cols <= 0:
-        raise ValueError("cols must be bigger than 0.")
-
-    graph = nx.grid_2d_graph(rows, cols)
-
-    return graph
-
-def create_hypercube_graph(
-    dimension: int,
-) -> nx.Graph:
-    '''Create d-dimension Hypercube graph.'''
-
-    if dimension <= 0:
-        raise ValueError("dimension must be bigger than 0.")
-
-    graph = nx.hypercube_graph(dimension)
-
-    return graph
-
-def create_2d_torus_graph(
+def create_torus_2d_graph(
     rows: int,
     cols: int,
 ) -> nx.Graph:
@@ -134,7 +106,7 @@ def create_2d_torus_graph(
             graph.add_edge(u, right, edge_class = "horizontal")
             graph.add_edge(u, down, edge_class = "vertical")
     
-    graph.graph["family"] = "2d_torus"
+    graph.graph["family"] = "torus_2d"
     graph.graph["rows"] = rows
     graph.graph["cols"] = cols
     graph.graph["edge_classes"] = ("horizontal", "vertical")
