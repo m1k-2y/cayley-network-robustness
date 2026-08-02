@@ -211,7 +211,7 @@ def test_random_regular_graph_rejects_odd_degree_sum():
     with pytest.raises(ValueError):
         create_random_regular_graph(n, d)
 
-def test_create_2d_torus_graph_3x3_basic_properties():
+def test_create_torus_2d_graph_3x3_basic_properties():
 
     rows = 3
     cols = 3
@@ -226,7 +226,7 @@ def test_create_2d_torus_graph_3x3_basic_properties():
     
     assert nx.is_connected(graph)
 
-def test_create_2d_torus_graph_16x16_size_and_degree():
+def test_create_torus_2d_graph_16x16_size_and_degree():
 
     rows = 16
     cols = 16
@@ -239,7 +239,7 @@ def test_create_2d_torus_graph_16x16_size_and_degree():
     for _, degree in graph.degree():
         assert degree == 4
 
-def test_create_2d_torus_graph_16x16_edge_class_counts():
+def test_create_torus_2d_graph_16x16_edge_class_counts():
 
     rows = 16
     cols = 16
@@ -261,7 +261,7 @@ def test_create_2d_torus_graph_16x16_edge_class_counts():
 
     assert h + v == graph.number_of_edges()
 
-def test_create_2d_torus_graph_16x16_diameter():
+def test_create_torus_2d_graph_16x16_diameter():
 
     rows = 16
     cols = 16
@@ -270,7 +270,7 @@ def test_create_2d_torus_graph_16x16_diameter():
 
     assert nx.diameter(graph) == 16
 
-def test_create_2d_torus_graph_rejects_dimensions_below_3():
+def test_create_torus_2d_graph_rejects_dimensions_below_3():
 
     rows1 = 2
     cols1 = 3
@@ -290,7 +290,7 @@ def test_create_2d_torus_graph_rejects_dimensions_below_3():
     with pytest.raises(ValueError):
         create_torus_2d_graph(rows3, cols3)
 
-def test_create_2d_torus_graph_16x16_node_zero_neighbors():
+def test_create_torus_2d_graph_16x16_node_zero_neighbors():
 
     rows = 16
     cols = 16
@@ -299,7 +299,7 @@ def test_create_2d_torus_graph_16x16_node_zero_neighbors():
 
     assert set(graph.neighbors(0)) == {1, 15, 16, 240}
 
-def test_create_2d_torus_graph_removing_horizontal_edges_creates_16_components():
+def test_create_torus_2d_graph_removing_horizontal_edges_creates_16_components():
 
     rows = 16
     cols = 16
@@ -315,3 +315,29 @@ def test_create_2d_torus_graph_removing_horizontal_edges_creates_16_components()
     graph.remove_edges_from(horizontal_edges)
 
     assert nx.number_connected_components(graph) == 16
+
+def test_torus_2d_edge_classes_match_directions_on_rectangular_graph():
+
+    rows = 4
+    cols = 8
+
+    graph = create_torus_2d_graph(rows, cols)
+
+    horizontal_edges = []
+    vertical_edges = []
+ 
+    for u, v, data in graph.edges(data = True):
+        if data["edge_class"] == "horizontal":
+            horizontal_edges.append((u, v))
+
+        elif data["edge_class"] == "vertical":
+            vertical_edges.append((u, v))
+
+    horizontal_graph = graph.copy()
+    vertical_graph = graph.copy()
+
+    horizontal_graph.remove_edges_from(horizontal_edges)
+    vertical_graph.remove_edges_from(vertical_edges)
+
+    assert nx.number_connected_components(horizontal_graph) == cols
+    assert nx.number_connected_components(vertical_graph) == rows
