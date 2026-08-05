@@ -1,6 +1,6 @@
 '''Simulate graph attacks and record robustness metrics at each step.'''
 from typing import TypedDict
-from _collections_abc import Hashable
+from collections.abc import Hashable
 import networkx as nx
 import random
 
@@ -22,23 +22,28 @@ def measure_attack_step(
 ) -> AttackStep:
     '''Measure one attack step relative to the initial graph size.'''
 
-    step : AttackStep = {}
+    if initial_node_count <= 0:
+        raise ValueError("initial_node_count must be positive.")
 
-    step['removed_fraction'] = removed_fraction
-    step['remaining_nodes'] = graph.number_of_nodes()
-    step['component_count'] = nx.number_connected_components(graph)
-
+    component_count = 0
     giant_component_size = 0
+
     for component in nx.connected_components(graph):
-        if len(component) > giant_component_size:
+        component_count += 1
+
+        if len(component) >= giant_component_size:
             giant_component_size = len(component)
+    
+    step : AttackStep = {
+        "removed_fraction": removed_fraction,
+        "remaining_nodes": graph.number_of_nodes(),
+        "component_count": component_count,
+        "giant_component_size": giant_component_size,
+        "giant_component_ratio": giant_component_size / initial_node_count,
+        "removed_item": removed_item,
+    }
 
-    step['giant_component_size'] = giant_component_size
-
-    step['giant_component_ratio'] = giant_component_size / initial_node_count
-    step['removed_item'] = removed_item  
-
-    return step  
+    return step
 
 def simulate_random_node_failure(
     graph: nx.Graph,
