@@ -1,6 +1,7 @@
 '''Simulate graph attacks and record robustness metrics at each step.'''
 from typing import TypedDict
 from collections.abc import Hashable
+from src.metrics import compute_component_sizes
 import networkx as nx
 import random
 
@@ -25,15 +26,16 @@ def measure_attack_step(
     if initial_node_count <= 0:
         raise ValueError("initial_node_count must be positive.")
 
-    component_count = 0
-    giant_component_size = 0
+    component_sizes = compute_component_sizes(graph)
 
-    for component in nx.connected_components(graph):
-        component_count += 1
+    component_count = len(component_sizes)
 
-        if len(component) >= giant_component_size:
-            giant_component_size = len(component)
-    
+    if len(component_sizes) > 0:
+        giant_component_size = component_sizes[0]
+
+    else :
+        giant_component_size = 0
+
     step : AttackStep = {
         "removed_fraction": removed_fraction,
         "remaining_nodes": graph.number_of_nodes(),
