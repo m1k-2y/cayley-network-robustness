@@ -1,16 +1,38 @@
 import networkx as nx
 
+def get_largest_connected_component(
+    graph: nx.Graph,
+) -> nx.Graph | None:
+
+    if graph.number_of_nodes() == 0:
+        return None
+
+    largest_component_nodes: set[int] | None = None
+
+    for component in nx.connected_components(graph):
+        if largest_component_nodes is None:
+            largest_component_nodes = component
+
+        elif len(component) > len(largest_component_nodes):
+            largest_component_nodes = component
+
+        elif len(component) == len(largest_component_nodes):
+            if min(largest_component_nodes) > min(component):
+                largest_component_nodes = component
+
+    return graph.subgraph(largest_component_nodes)
+
 def compute_diameter(
     graph: nx.Graph,
 ) -> int | None:
     
-    if graph.number_of_nodes() == 0:
+    largest_component = get_largest_connected_component(graph)
+
+    if largest_component is None :
         return None
-    
-    if not nx.is_connected(graph):
-        return None
-    
-    return nx.diameter(graph)
+
+    else:
+        return nx.diameter(largest_component)
 
 def compute_giant_component_ratio(
     graph: nx.Graph,
@@ -37,16 +59,13 @@ def compute_average_shortest_path_length(
     graph: nx.Graph,
 ) -> float | None:
     '''Compute and return average shortest path length'''
-    
-    num_nodes = graph.number_of_nodes()
 
-    if num_nodes == 0:
+    largest_component = get_largest_connected_component(graph)
+
+    if largest_component is None:
         return None
-    
-    if not nx.is_connected(graph):
-        return None
-    
-    return nx.average_shortest_path_length(graph)
+
+    return nx.average_shortest_path_length(largest_component)
 
 def compute_basic_metrics(
     graph: nx.Graph,
@@ -66,6 +85,7 @@ def compute_basic_metrics(
             "diameter": None,
             "giant_component_ratio": 0.0,
             "average_shortest_path_length": None,
+            "global_efficiency": 0.0,
         }
     
     info = {}
@@ -85,6 +105,7 @@ def compute_basic_metrics(
     info["diameter"] = compute_diameter(graph)
     info["giant_component_ratio"] = compute_giant_component_ratio(graph)
     info["average_shortest_path_length"] = compute_average_shortest_path_length(graph)
+    info["global_efficiency"] = compute_global_efficiency(graph)
 
     return info
 
@@ -132,3 +153,17 @@ def compute_component_metrics(
     }
 
     return component_metrics
+
+def compute_global_efficiency(
+    graph: nx.Graph,
+) -> float:
+    '''Compute and return graph's global efficiency'''
+
+    if graph.number_of_nodes() == 0:
+        return 0.0
+
+    elif graph.number_of_nodes() == 1:
+        return 0.0
+
+    else:
+        return nx.global_efficiency(graph)
