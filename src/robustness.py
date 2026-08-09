@@ -7,91 +7,23 @@ from src.metrics import compute_average_shortest_path_length
 from src.metrics import compute_global_efficiency
 import networkx as nx
 import random
-import csv
 
 class AttackStep(TypedDict):
     removed_fraction: float
     removed_count: int
     remaining_nodes: int
+    remaining_edges: int
     component_count: int
-    giant_component_size: int
-    giant_component_ratio: float
+    largest_component_size: int
+    largest_component_ratio: float
+    second_largest_component_size: int
     second_largest_component_ratio: float
     removed_item: Hashable | None
-    diameter: int | None
-    average_shortest_path_length: float | None
-    global_efficiency: float | None
-
-class ExperimentRow(TypedDict):
-    graph_family: str
-    n: int
-    graph_seed: int | None
-    attack_type: str
-    attack_seed: int | None
-    removal_type: str
-    removed_fraction: float
-    removed_count: int
-    remaining_nodes: int
-    component_count: int
-    giant_component_size: int
-    giant_component_ratio: float
-    second_largest_component_ratio: float
-    diameter: int | None
-    average_shortest_path_length: float | None
+    diameter_lcc: int | None
+    average_shortest_path_length_lcc: float | None
     global_efficiency: float | None
 
 AttackHistory = list[AttackStep]
-
-def build_experiment_row(
-    graph_family: str,
-    n: int,
-    graph_seed: int | None,
-    attack_type: str,
-    attack_seed: int | None,
-    removal_type: str,
-    step: AttackStep,
-) -> ExperimentRow:
-    '''Build experiment row.'''
-
-    row : ExperimentRow = {
-        "graph_family": graph_family,
-        "n": n,
-        "graph_seed": graph_seed,
-        "attack_type": attack_type,
-        "attack_seed": attack_seed,
-        "removal_type": removal_type,
-        "removed_fraction": step["removed_fraction"],
-        "removed_count": step["removed_count"],
-        "remaining_nodes": step["remaining_nodes"],
-        "component_count": step["component_count"],
-        "giant_component_size": step["giant_component_size"],
-        "giant_component_ratio": step["giant_component_ratio"],
-        "second_largest_component_ratio": step["second_largest_component_ratio"],
-        "diameter": step["diameter"],
-        "average_shortest_path_length": step["average_shortest_path_length"],
-        "global_efficiency": step["global_efficiency"],
-    }
-
-    return row
-
-def build_experiment_rows(
-    graph_family: str,
-    n: int,
-    graph_seed: int | None,
-    attack_type: str,
-    attack_seed: int | None,
-    removal_type: str,
-    history: AttackHistory,
-) -> list[ExperimentRow]:
-    '''Build experiment rows list.'''
-
-    rows : list[ExperimentRow] = []
-
-    for step in history:
-        row = build_experiment_row(graph_family, n, graph_seed, attack_type, attack_seed, removal_type, step)
-        rows.append(row)
-
-    return rows
 
 def build_path_metric_checkpoints(
     initial_item_count: int,
@@ -129,63 +61,47 @@ def measure_attack_step(
     component_count = len(component_sizes)
 
     if component_count >= 2:
-        giant_component_size = component_sizes[0]
-        second_largest_component_ratio = component_sizes[1] / initial_node_count
+        largest_component_size = component_sizes[0]
+        second_largest_component_size = component_sizes[1]
+        second_largest_component_ratio = second_largest_component_size / initial_node_count
 
     elif component_count == 1:
-        giant_component_size = component_sizes[0]
+        largest_component_size = component_sizes[0]
+        second_largest_component_size = 0
         second_largest_component_ratio = 0.0
 
     else :
-        giant_component_size = 0
+        largest_component_size = 0
+        second_largest_component_size = 0
         second_largest_component_ratio = 0.0
 
     if is_path_metric_checkpoint:
-        diameter = compute_diameter(graph)
-        average_shortest_path_length = compute_average_shortest_path_length(graph)
+        diameter_lcc = compute_diameter(graph)
+        average_shortest_path_length_lcc = compute_average_shortest_path_length(graph)
         global_efficiency = compute_global_efficiency(graph)
 
     else:
-        diameter = None
-        average_shortest_path_length = None
+        diameter_lcc = None
+        average_shortest_path_length_lcc = None
         global_efficiency = None
 
     step : AttackStep = {
             "removed_fraction": removed_fraction,
             "removed_count": removed_count,
             "remaining_nodes": graph.number_of_nodes(),
+            "remaining_edges": graph.number_of_edges(),
             "component_count": component_count,
-            "giant_component_size": giant_component_size,
-            "giant_component_ratio": giant_component_size / initial_node_count,
+            "largest_component_size": largest_component_size,
+            "largest_component_ratio": largest_component_size / initial_node_count,
+            "second_largest_component_size": second_largest_component_size,
             "second_largest_component_ratio": second_largest_component_ratio,
             "removed_item": removed_item,
-            "diameter": diameter,
-            "average_shortest_path_length": average_shortest_path_length,
+            "diameter_lcc": diameter_lcc,
+            "average_shortest_path_length_lcc": average_shortest_path_length_lcc,
             "global_efficiency": global_efficiency,
         }
 
     return step
-
-def write_experiment_rows_csv(
-    rows: list[ExperimentRow],
-    output_path: str,
-) -> None:
-    '''Save csv file.'''
-
-    if len(rows) == 0:
-        raise ValueError("row must not be empty.")
-
-    with open(output_path, 'w', encoding="utf-8", newline='') as file:
-        fieldnames = []
-
-        for key in rows[0]:
-            fieldnames.append(key)
-
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
 
 def simulate_random_node_failure(
     graph: nx.Graph,

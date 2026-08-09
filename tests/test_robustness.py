@@ -5,10 +5,10 @@ from src.robustness import measure_attack_step
 from src.robustness import simulate_random_node_failure
 from src.robustness import build_path_metric_checkpoints
 from src.robustness import simulate_random_edge_failure
-from src.robustness import build_experiment_row
+from src.results import build_experiment_row
 from src.cayley_graph import create_cyclic_cayley_graph
-from src.robustness import build_experiment_rows
-from src.robustness import write_experiment_rows_csv
+from src.results import build_experiment_rows
+from src.results import write_experiment_rows_csv
 
 def test_measure_attack_step_connected_graph():
 
@@ -22,13 +22,15 @@ def test_measure_attack_step_connected_graph():
     assert step['removed_fraction'] == 0.0
     assert step['removed_count'] == 0
     assert step['remaining_nodes'] == 4
+    assert step['remaining_edges'] == 3
     assert step['component_count'] == 1
-    assert step['giant_component_size'] == 4
-    assert step['giant_component_ratio'] == 1.0
+    assert step['largest_component_size'] == 4
+    assert step['largest_component_ratio'] == 1.0
+    assert step["second_largest_component_size"] == 0
     assert step["second_largest_component_ratio"] == 0.0
     assert step['removed_item'] is None
-    assert step["diameter"] == 3
-    assert step["average_shortest_path_length"] == pytest.approx(5 / 3)
+    assert step["diameter_lcc"] == 3
+    assert step["average_shortest_path_length_lcc"] == pytest.approx(5 / 3)
     assert step["global_efficiency"] == pytest.approx(13/ 18)
 
 def test_measure_attack_step_disconnected_graph():
@@ -47,8 +49,9 @@ def test_measure_attack_step_disconnected_graph():
     assert step['removed_count'] == 1
     assert step['remaining_nodes'] == 5
     assert step['component_count'] == 2
-    assert step['giant_component_size'] == 3
-    assert step['giant_component_ratio'] == 0.5
+    assert step['largest_component_size'] == 3
+    assert step['largest_component_ratio'] == 0.5
+    assert step['second_largest_component_size'] == 2
     assert step["second_largest_component_ratio"] == pytest.approx(1 / 3)
     assert step['removed_item'] == 3
 
@@ -68,8 +71,9 @@ def test_measure_attack_step_empty_graph():
     assert step['removed_count'] == 4
     assert step['remaining_nodes'] == 0
     assert step['component_count'] == 0
-    assert step['giant_component_size'] == 0
-    assert step['giant_component_ratio'] == 0.0
+    assert step['largest_component_size'] == 0
+    assert step['largest_component_ratio'] == 0.0
+    assert step['second_largest_component_size'] == 0
     assert step["second_largest_component_ratio"] == 0.0
     assert step['removed_item'] == removed_item
 
@@ -91,8 +95,9 @@ def test_measure_attack_step_single_node_graph():
     assert step['removed_count'] == 3
     assert step['remaining_nodes'] == 1
     assert step['component_count'] == 1
-    assert step['giant_component_size'] == 1
-    assert step['giant_component_ratio'] == 0.25
+    assert step['largest_component_size'] == 1
+    assert step['largest_component_ratio'] == 0.25
+    assert step['second_largest_component_size'] == 0
     assert step["second_largest_component_ratio"] == 0.0
     assert step['removed_item'] == removed_item
 
@@ -161,11 +166,11 @@ def test_measure_attack_step_skips_path_metrics_outside_checkpoint():
     assert step['removed_count'] == removed_count
     assert step["remaining_nodes"] == 99
     assert step["component_count"] == 1
-    assert step["giant_component_size"] == 99
-    assert step["giant_component_ratio"] == 0.99
+    assert step["largest_component_size"] == 99
+    assert step["largest_component_ratio"] == 0.99
     assert step["removed_item"] == removed_item
-    assert step["diameter"] is None
-    assert step["average_shortest_path_length"] is None
+    assert step["diameter_lcc"] is None
+    assert step["average_shortest_path_length_lcc"] is None
     assert step["global_efficiency"] is None
 
 def test_simulate_random_node_failure_uses_path_metric_checkpoints():
@@ -174,12 +179,12 @@ def test_simulate_random_node_failure_uses_path_metric_checkpoints():
 
     history = simulate_random_node_failure(graph, seed=42)
 
-    assert history[1]['diameter'] is None
-    assert history[1]['average_shortest_path_length'] is None
+    assert history[1]['diameter_lcc'] is None
+    assert history[1]['average_shortest_path_length_lcc'] is None
     assert history[1]['global_efficiency'] is None
 
-    assert history[5]['diameter'] is not None
-    assert history[5]['average_shortest_path_length'] is not None
+    assert history[5]['diameter_lcc'] is not None
+    assert history[5]['average_shortest_path_length_lcc'] is not None
     assert history[5]['global_efficiency'] is not None
 
 def test_simulate_random_edge_failure_basic():
@@ -210,12 +215,12 @@ def test_simulate_random_edge_failure_uses_path_metric_checkpoints():
 
     history = simulate_random_edge_failure(graph, seed=42)
 
-    assert history[1]["diameter"] is None
-    assert history[1]["average_shortest_path_length"] is None
+    assert history[1]["diameter_lcc"] is None
+    assert history[1]["average_shortest_path_length_lcc"] is None
     assert history[1]["global_efficiency"] is None
 
-    assert history[5]["diameter"] is not None
-    assert history[5]["average_shortest_path_length"] is not None
+    assert history[5]["diameter_lcc"] is not None
+    assert history[5]["average_shortest_path_length_lcc"] is not None
     assert history[5]["global_efficiency"] is not None
 
 def test_random_node_failure_is_reproducible_with_same_seed():
@@ -251,12 +256,24 @@ def test_build_experiment_row_combines_metadata_and_attack_step():
 
     step = measure_attack_step(graph, initial_node_count, removed_fraction=0.0, removed_count=0, is_path_metric_checkpoint=False)
 
+    run_id = "test_run"
     graph_family = "cyclic_local"
     attack_type = "random"
     attack_seed = 42
     removal_type = "node"
 
-    row = build_experiment_row(graph_family=graph_family, n=n, graph_seed=None, attack_type=attack_type, attack_seed=attack_seed, removal_type=removal_type, step=step)
+    row = build_experiment_row(
+        run_id=run_id,
+        graph_family=graph_family,
+        n=n, 
+        graph_seed=None, 
+        attack_type=attack_type, 
+        attack_seed=attack_seed, 
+        removal_type=removal_type,
+        target_class=None,
+        target_class_removal_fraction=None,
+        step=step
+    )
 
     assert row["graph_family"] == graph_family
     assert row["n"] == n
@@ -267,10 +284,10 @@ def test_build_experiment_row_combines_metadata_and_attack_step():
 
     assert row["removed_count"] == step["removed_count"]
     assert row['removed_fraction'] == step["removed_fraction"]
-    assert row["giant_component_ratio"] == step["giant_component_ratio"]
+    assert row["largest_component_ratio"] == step["largest_component_ratio"]
 
-    assert row["diameter"] is None
-    assert row["average_shortest_path_length"] is None
+    assert row["diameter_lcc"] is None
+    assert row["average_shortest_path_length_lcc"] is None
     assert row["global_efficiency"] is None
 
 def test_build_experiment_rows_converts_entire_history():
@@ -279,12 +296,15 @@ def test_build_experiment_rows_converts_entire_history():
 
     history = simulate_random_node_failure(graph, seed=42)
     rows = build_experiment_rows(
+        run_id="test_run",
         graph_family="path_graph",
         n=4,
         graph_seed=None,
         attack_type="random",
         attack_seed=42,
         removal_type="node",
+        target_class=None,
+        target_class_removal_fraction=None,
         history=history,
     )
 
@@ -308,12 +328,15 @@ def test_write_experiment_rows_csv_writes_header_and_rows(tmp_path):
     history = simulate_random_node_failure(graph, seed=42)
 
     rows = build_experiment_rows(
+        run_id="test_run",
         graph_family="path_graph",
         n=4,
         graph_seed=None,
         attack_type="random",
         attack_seed=42,
         removal_type="node",
+        target_class=None,
+        target_class_removal_fraction=None,
         history=history,
     )
 
@@ -329,24 +352,32 @@ def test_write_experiment_rows_csv_writes_header_and_rows(tmp_path):
         assert len(rows) == len(read_rows)
 
         assert reader.fieldnames == [
+            "run_id",
             "graph_family",
             "n",
             "graph_seed",
             "attack_type",
             "attack_seed",
             "removal_type",
+            "target_class",
+            "target_class_removal_fraction",
             "removed_fraction",
             "removed_count",
             "remaining_nodes",
+            "remaining_edges",
             "component_count",
-            "giant_component_size",
-            "giant_component_ratio",
+            "largest_component_size",
+            "largest_component_ratio",
+            "second_largest_component_size",
             "second_largest_component_ratio",
-            "diameter",
-            "average_shortest_path_length",
+            "diameter_lcc",
+            "average_shortest_path_length_lcc",
             "global_efficiency",
+            "algebraic_connectivity",
+            "runtime_seconds",
         ]
 
+        assert read_rows[0]['run_id'] == "test_run"
         assert read_rows[0]['graph_family'] == "path_graph"
         assert read_rows[0]['attack_type'] == "random"
         assert read_rows[0]['attack_seed'] == "42"

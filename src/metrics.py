@@ -122,38 +122,6 @@ def compute_component_sizes(
 
     return component_sizes
 
-def compute_component_metrics(
-    graph: nx.Graph,
-    initial_node_count: int,
-) -> dict[str, int | float]:
-    '''Compute component metrics from given graph'''
-
-    if initial_node_count <= 0:
-        raise ValueError("initial_node_count must be positive.")
-
-    component_sizes = compute_component_sizes(graph)
-
-    if len(component_sizes) >= 2:
-        s1 = component_sizes[0] / initial_node_count
-        s2 = component_sizes[1] / initial_node_count
-
-    elif len(component_sizes) == 1:
-        s1 = component_sizes[0] / initial_node_count
-        s2 = 0.0
-
-    else:
-        s1 = 0.0
-        s2 = 0.0
-
-    component_metrics = {
-        "remaining_nodes": graph.number_of_nodes(),
-        "component_count": len(component_sizes),
-        "s1": s1,
-        "s2": s2,
-    }
-
-    return component_metrics
-
 def compute_global_efficiency(
     graph: nx.Graph,
 ) -> float:
