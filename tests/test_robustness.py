@@ -1,11 +1,14 @@
 import networkx as nx
 import pytest
+import csv
 from src.robustness import measure_attack_step
 from src.robustness import simulate_random_node_failure
 from src.robustness import build_path_metric_checkpoints
 from src.robustness import simulate_random_edge_failure
 from src.robustness import build_experiment_row
 from src.cayley_graph import create_cyclic_cayley_graph
+from src.robustness import build_experiment_rows
+from src.robustness import write_experiment_rows_csv
 
 def test_measure_attack_step_connected_graph():
 
@@ -269,3 +272,90 @@ def test_build_experiment_row_combines_metadata_and_attack_step():
     assert row["diameter"] is None
     assert row["average_shortest_path_length"] is None
     assert row["global_efficiency"] is None
+
+def test_build_experiment_rows_converts_entire_history():
+
+    graph = nx.path_graph(4)
+
+    history = simulate_random_node_failure(graph, seed=42)
+    rows = build_experiment_rows(
+        graph_family="path_graph",
+        n=4,
+        graph_seed=None,
+        attack_type="random",
+        attack_seed=42,
+        removal_type="node",
+        history=history,
+    )
+
+    assert len(rows) == len(history)
+
+    for row in rows:
+        assert row["graph_family"] == "path_graph"
+        assert row["n"] == 4
+        assert row["graph_seed"] is None
+        assert row["attack_type"] == "random"
+        assert row["attack_seed"] == 42
+        assert row["removal_type"] == "node"
+
+    for i in range(len(history)):
+        assert rows[i]["removed_count"] == history[i]["removed_count"]
+
+def test_write_experiment_rows_csv_writes_header_and_rows(tmp_path):
+
+    graph = nx.path_graph(4)
+
+    history = simulate_random_node_failure(graph, seed=42)
+
+    rows = build_experiment_rows(
+        graph_family="path_graph",
+        n=4,
+        graph_seed=None,
+        attack_type="random",
+        attack_seed=42,
+        removal_type="node",
+        history=history,
+    )
+
+    output_path = tmp_path / "results.csv"
+    write_experiment_rows_csv(rows, output_path=str(output_path))
+
+    assert output_path.exists()
+
+    with open(output_path, encoding="utf-8", newline='') as file:
+        reader = csv.DictReader(file)
+
+        read_rows = list(reader)
+        assert len(rows) == len(read_rows)
+
+        assert reader.fieldnames == [
+            "graph_family",
+            "n",
+            "graph_seed",
+            "attack_type",
+            "attack_seed",
+            "removal_type",
+            "removed_fraction",
+            "removed_count",
+            "remaining_nodes",
+            "component_count",
+            "giant_component_size",
+            "giant_component_ratio",
+            "second_largest_component_ratio",
+            "diameter",
+            "average_shortest_path_length",
+            "global_efficiency",
+        ]
+
+        assert read_rows[0]['graph_family'] == "path_graph"
+        assert read_rows[0]['attack_type'] == "random"
+        assert read_rows[0]['attack_seed'] == "42"
+        assert read_rows[0]['removed_count'] == "0"
+
+def test_write_experiment_rows_csv_rejects_empty_rows(tmp_path):
+
+    rows = []
+    output_path = tmp_path / "results.csv"
+
+    with pytest.raises(ValueError):
+        write_experiment_rows_csv(rows, output_path)

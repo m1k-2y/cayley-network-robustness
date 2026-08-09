@@ -7,6 +7,7 @@ from src.metrics import compute_average_shortest_path_length
 from src.metrics import compute_global_efficiency
 import networkx as nx
 import random
+import csv
 
 class AttackStep(TypedDict):
     removed_fraction: float
@@ -50,6 +51,7 @@ def build_experiment_row(
     removal_type: str,
     step: AttackStep,
 ) -> ExperimentRow:
+    '''Build experiment row.'''
 
     row : ExperimentRow = {
         "graph_family": graph_family,
@@ -72,9 +74,29 @@ def build_experiment_row(
 
     return row
 
+def build_experiment_rows(
+    graph_family: str,
+    n: int,
+    graph_seed: int | None,
+    attack_type: str,
+    attack_seed: int | None,
+    removal_type: str,
+    history: AttackHistory,
+) -> list[ExperimentRow]:
+    '''Build experiment rows list.'''
+
+    rows : list[ExperimentRow] = []
+
+    for step in history:
+        row = build_experiment_row(graph_family, n, graph_seed, attack_type, attack_seed, removal_type, step)
+        rows.append(row)
+
+    return rows
+
 def build_path_metric_checkpoints(
     initial_item_count: int,
 ) -> set[int]:
+    '''Build checkpoints.'''
 
     if initial_item_count <= 0:
         raise ValueError("initial_item_count must be positive.")
@@ -143,6 +165,27 @@ def measure_attack_step(
         }
 
     return step
+
+def write_experiment_rows_csv(
+    rows: list[ExperimentRow],
+    output_path: str,
+) -> None:
+    '''Save csv file.'''
+
+    if len(rows) == 0:
+        raise ValueError("row must not be empty.")
+
+    with open(output_path, 'w', encoding="utf-8", newline='') as file:
+        fieldnames = []
+
+        for key in rows[0]:
+            fieldnames.append(key)
+
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
 
 def simulate_random_node_failure(
     graph: nx.Graph,
