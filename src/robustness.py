@@ -2,9 +2,7 @@
 from typing import TypedDict
 from collections.abc import Hashable
 from src.metrics import compute_component_sizes
-from src.metrics import compute_diameter
-from src.metrics import compute_average_shortest_path_length
-from src.metrics import compute_global_efficiency
+from src.metrics import compute_shortest_path_metrics
 import networkx as nx
 import random
 
@@ -76,9 +74,7 @@ def measure_attack_step(
         second_largest_component_ratio = 0.0
 
     if is_path_metric_checkpoint:
-        diameter_lcc = compute_diameter(graph)
-        average_shortest_path_length_lcc = compute_average_shortest_path_length(graph)
-        global_efficiency = compute_global_efficiency(graph)
+        diameter_lcc, average_shortest_path_length_lcc, global_efficiency = compute_shortest_path_metrics(graph)
 
     else:
         diameter_lcc = None

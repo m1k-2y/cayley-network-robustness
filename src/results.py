@@ -28,6 +28,32 @@ class ExperimentRow(TypedDict):
     algebraic_connectivity: float | None
     runtime_seconds: float | None
 
+EXPERIMENT_ROW_FIELDS = (
+    "run_id",
+    "graph_family",
+    "n",
+    "graph_seed",
+    "attack_type",
+    "attack_seed",
+    "removal_type",
+    "target_class",
+    "target_class_removal_fraction",
+    "removed_fraction",
+    "removed_count",
+    "remaining_nodes",
+    "remaining_edges",
+    "component_count",
+    "largest_component_size",
+    "largest_component_ratio",
+    "second_largest_component_size",
+    "second_largest_component_ratio",
+    "diameter_lcc",
+    "average_shortest_path_length_lcc",
+    "global_efficiency",
+    "algebraic_connectivity",
+    "runtime_seconds",
+)
+ 
 def build_experiment_row(
     run_id: str,
     graph_family: str,
@@ -102,12 +128,7 @@ def write_experiment_rows_csv(
         raise ValueError("row must not be empty.")
 
     with open(output_path, 'w', encoding="utf-8", newline='') as file:
-        fieldnames = []
-
-        for key in rows[0]:
-            fieldnames.append(key)
-
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer = csv.DictWriter(file, fieldnames=EXPERIMENT_ROW_FIELDS)
 
         writer.writeheader()
         for row in rows:

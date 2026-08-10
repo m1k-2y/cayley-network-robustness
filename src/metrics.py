@@ -135,3 +135,46 @@ def compute_global_efficiency(
 
     else:
         return nx.global_efficiency(graph)
+
+def compute_shortest_path_metrics(
+    graph: nx.Graph,
+) -> tuple[int, float, float]:
+    """Compute diameter_lcc, average_shortest_path_length_lcc and global_efficiency."""
+
+    if graph.number_of_nodes() == 0:
+        diameter_lcc = 0
+        average_shortest_path_length_lcc = 0.0
+        global_efficiency = 0.0
+
+        return diameter_lcc, average_shortest_path_length_lcc, global_efficiency
+
+    paths = nx.all_pairs_shortest_path_length(graph)
+    lcc_nodes = set(get_largest_connected_component(graph).nodes)
+
+    diameter_lcc = 0
+    distance_sum = 0
+    pair_count = 0
+    efficiency_sum = 0.0
+
+    for source, distances in paths:
+        for node, distance in distances.items():
+            if node in lcc_nodes:
+                diameter_lcc = max(diameter_lcc, distance)
+
+                if node != source:
+                    distance_sum += distance
+                    pair_count += 1
+
+            if node != source:
+                efficiency_sum += 1 / distance
+
+    average_shortest_path_length_lcc = (
+        distance_sum / pair_count if pair_count > 0 else 0.0
+    )
+
+    n = graph.number_of_nodes()
+    global_efficiency = (
+        efficiency_sum / (n * (n - 1)) if n > 1 else 0.0
+    )
+
+    return diameter_lcc, average_shortest_path_length_lcc, global_efficiency
