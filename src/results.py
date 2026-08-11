@@ -90,7 +90,7 @@ def build_experiment_row(
         "diameter_lcc": step["diameter_lcc"],
         "average_shortest_path_length_lcc": step["average_shortest_path_length_lcc"],
         "global_efficiency": step["global_efficiency"],
-        "algebraic_connectivity": None,
+        "algebraic_connectivity": step["algebraic_connectivity"],
         "runtime_seconds": step["runtime_seconds"],
     }
 

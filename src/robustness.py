@@ -3,6 +3,7 @@ from typing import TypedDict
 from collections.abc import Hashable
 from src.metrics import compute_component_sizes
 from src.metrics import compute_shortest_path_metrics
+from src.metrics import compute_algebraic_connectivity
 import networkx as nx
 import random
 import time
@@ -22,6 +23,7 @@ class AttackStep(TypedDict):
     average_shortest_path_length_lcc: float | None
     global_efficiency: float | None
     runtime_seconds: float
+    algebraic_connectivity: float | None
 
 AttackHistory = list[AttackStep]
 
@@ -79,11 +81,13 @@ def measure_attack_step(
 
     if is_path_metric_checkpoint:
         diameter_lcc, average_shortest_path_length_lcc, global_efficiency = compute_shortest_path_metrics(graph)
+        algebraic_connectivity = compute_algebraic_connectivity(graph)
 
     else:
         diameter_lcc = None
         average_shortest_path_length_lcc = None
         global_efficiency = None
+        algebraic_connectivity = None
 
     end = time.perf_counter()
 
@@ -104,6 +108,7 @@ def measure_attack_step(
             "average_shortest_path_length_lcc": average_shortest_path_length_lcc,
             "global_efficiency": global_efficiency,
             "runtime_seconds": runtime_seconds,
+            "algebraic_connectivity": algebraic_connectivity,
         }
 
     return step

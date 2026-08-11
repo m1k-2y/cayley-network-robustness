@@ -435,7 +435,7 @@ def test_random_edge_failure_zero_max_fraction_removes_nothing():
 
     history = simulate_random_edge_failure(graph, seed=42, max_removed_fraction=0.0)
     assert len(history) == 1
-    
+
     assert history[0]["removed_count"] == 0
     assert history[0]["remaining_edges"] == 10
     assert history[0]["removed_fraction"] == 0.0
@@ -450,3 +450,53 @@ def test_random_edge_failure_rejects_invalid_max_removed_fraction():
 
     with pytest.raises(ValueError):
         simulate_random_edge_failure(graph, seed=42, max_removed_fraction=1.1)
+
+def test_measure_attack_step_computes_algebraic_connectivity_at_checkpoint():
+
+    graph = nx.path_graph(3)
+    initial_node_count = graph.number_of_nodes()
+
+    step = measure_attack_step(graph, initial_node_count, removed_fraction=0.0, removed_count=0, is_path_metric_checkpoint=True)
+
+    assert step["algebraic_connectivity"] == pytest.approx(1.0)
+
+def test_measure_attack_step_skips_algebraic_connectivity_outside_checkpoint():
+
+    graph = nx.path_graph(3)
+    initial_node_count = graph.number_of_nodes()
+
+    graph.remove_node(0)
+    removed_fraction = 1 / initial_node_count
+    removed_count = 1
+
+    step = measure_attack_step(graph, initial_node_count, removed_fraction, removed_count, is_path_metric_checkpoint=False)
+
+    assert step["algebraic_connectivity"] is None
+
+def test_build_experiment_row_preserves_algebraic_connectivity():
+
+    graph = nx.path_graph(3)
+    initial_node_count = graph.number_of_nodes()
+
+    step = measure_attack_step(
+        graph,
+        initial_node_count,
+        removed_fraction=0.0,
+        removed_count=0,
+        is_path_metric_checkpoint=True,
+    )
+
+    row = build_experiment_row(
+        run_id="test_run",
+        graph_family="path_graph",
+        n=3,
+        graph_seed=None,
+        attack_type="random",
+        attack_seed=42,
+        removal_type="node",
+        target_class=None,
+        target_class_removal_fraction=None,
+        step=step,
+    )
+
+    assert row["algebraic_connectivity"] == step["algebraic_connectivity"]

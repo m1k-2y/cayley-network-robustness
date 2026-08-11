@@ -4,6 +4,7 @@ from src.metrics import get_largest_connected_component
 from src.metrics import compute_diameter
 from src.metrics import compute_average_shortest_path_length
 from src.metrics import compute_global_efficiency
+from src.metrics import compute_algebraic_connectivity
 import networkx as nx
 import pytest
 
@@ -172,3 +173,28 @@ def test_compute_global_efficiency_for_disconnected_graph():
     global_efficiency = compute_global_efficiency(graph)
 
     assert global_efficiency == pytest.approx(5 / 12)
+
+def test_compute_algebraic_connectivity_empty_graph():
+
+    graph = nx.path_graph(0)
+
+    assert compute_algebraic_connectivity(graph) == 0.0
+
+def test_compute_algebraic_connectivity_single_node():
+
+    graph = nx.path_graph(1)
+
+    assert compute_algebraic_connectivity(graph) == 0.0
+
+def test_compute_algebraic_connectivity_disconnected_graph():
+
+    graph = nx.path_graph(3)
+    graph.add_node(3)
+
+    assert compute_algebraic_connectivity(graph) == 0.0
+
+def test_compute_algebraic_connectivity_connected_graph():
+
+    graph = nx.path_graph(3)
+
+    assert compute_algebraic_connectivity(graph) == pytest.approx(1.0)

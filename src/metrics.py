@@ -67,6 +67,23 @@ def compute_average_shortest_path_length(
 
     return nx.average_shortest_path_length(largest_component)
 
+def compute_algebraic_connectivity(
+    graph: nx.Graph,
+) -> float:
+    '''Compute algebraic connectivity.'''
+
+    if graph.number_of_nodes() == 0:
+        return 0.0
+
+    if graph.number_of_nodes() == 1:
+        return 0.0
+
+    if not nx.is_connected(graph):
+        return 0.0
+
+    else:
+        return nx.algebraic_connectivity(graph)
+
 def compute_basic_metrics(
     graph: nx.Graph,
 ) -> dict:
