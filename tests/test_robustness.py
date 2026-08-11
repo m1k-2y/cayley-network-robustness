@@ -1,6 +1,7 @@
 import networkx as nx
 import pytest
 import csv
+from src.results import EXPERIMENT_ROW_FIELDS
 from src.robustness import measure_attack_step
 from src.robustness import simulate_random_node_failure
 from src.robustness import build_path_metric_checkpoints
@@ -32,6 +33,8 @@ def test_measure_attack_step_connected_graph():
     assert step["diameter_lcc"] == 3
     assert step["average_shortest_path_length_lcc"] == pytest.approx(5 / 3)
     assert step["global_efficiency"] == pytest.approx(13/ 18)
+    assert type(step["runtime_seconds"]) == float
+    assert step["runtime_seconds"] >= 0.0
 
 def test_measure_attack_step_disconnected_graph():
 
@@ -172,6 +175,8 @@ def test_measure_attack_step_skips_path_metrics_outside_checkpoint():
     assert step["diameter_lcc"] is None
     assert step["average_shortest_path_length_lcc"] is None
     assert step["global_efficiency"] is None
+    assert type(step["runtime_seconds"]) == float
+    assert step["runtime_seconds"] >= 0.0 
 
 def test_simulate_random_node_failure_uses_path_metric_checkpoints():
 
@@ -290,6 +295,8 @@ def test_build_experiment_row_combines_metadata_and_attack_step():
     assert row["average_shortest_path_length_lcc"] is None
     assert row["global_efficiency"] is None
 
+    assert row["runtime_seconds"] == step["runtime_seconds"]
+
 def test_build_experiment_rows_converts_entire_history():
 
     graph = nx.path_graph(4)
@@ -351,31 +358,7 @@ def test_write_experiment_rows_csv_writes_header_and_rows(tmp_path):
         read_rows = list(reader)
         assert len(rows) == len(read_rows)
 
-        assert reader.fieldnames == [
-            "run_id",
-            "graph_family",
-            "n",
-            "graph_seed",
-            "attack_type",
-            "attack_seed",
-            "removal_type",
-            "target_class",
-            "target_class_removal_fraction",
-            "removed_fraction",
-            "removed_count",
-            "remaining_nodes",
-            "remaining_edges",
-            "component_count",
-            "largest_component_size",
-            "largest_component_ratio",
-            "second_largest_component_size",
-            "second_largest_component_ratio",
-            "diameter_lcc",
-            "average_shortest_path_length_lcc",
-            "global_efficiency",
-            "algebraic_connectivity",
-            "runtime_seconds",
-        ]
+        assert reader.fieldnames == list(EXPERIMENT_ROW_FIELDS)
 
         assert read_rows[0]['run_id'] == "test_run"
         assert read_rows[0]['graph_family'] == "path_graph"

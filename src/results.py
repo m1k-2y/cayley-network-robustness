@@ -91,7 +91,7 @@ def build_experiment_row(
         "average_shortest_path_length_lcc": step["average_shortest_path_length_lcc"],
         "global_efficiency": step["global_efficiency"],
         "algebraic_connectivity": None,
-        "runtime_seconds": None,
+        "runtime_seconds": step["runtime_seconds"],
     }
 
     return row

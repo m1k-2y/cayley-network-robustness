@@ -5,6 +5,7 @@ from src.metrics import compute_component_sizes
 from src.metrics import compute_shortest_path_metrics
 import networkx as nx
 import random
+import time
 
 class AttackStep(TypedDict):
     removed_fraction: float
@@ -20,6 +21,7 @@ class AttackStep(TypedDict):
     diameter_lcc: int | None
     average_shortest_path_length_lcc: float | None
     global_efficiency: float | None
+    runtime_seconds: float
 
 AttackHistory = list[AttackStep]
 
@@ -54,6 +56,8 @@ def measure_attack_step(
     if initial_node_count <= 0:
         raise ValueError("initial_node_count must be positive.")
 
+    start = time.perf_counter()
+
     component_sizes = compute_component_sizes(graph)
 
     component_count = len(component_sizes)
@@ -81,6 +85,10 @@ def measure_attack_step(
         average_shortest_path_length_lcc = None
         global_efficiency = None
 
+    end = time.perf_counter()
+
+    runtime_seconds = end - start
+
     step : AttackStep = {
             "removed_fraction": removed_fraction,
             "removed_count": removed_count,
@@ -95,6 +103,7 @@ def measure_attack_step(
             "diameter_lcc": diameter_lcc,
             "average_shortest_path_length_lcc": average_shortest_path_length_lcc,
             "global_efficiency": global_efficiency,
+            "runtime_seconds": runtime_seconds,
         }
 
     return step
