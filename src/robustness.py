@@ -111,12 +111,16 @@ def measure_attack_step(
 def simulate_random_node_failure(
     graph: nx.Graph,
     seed: int,
+    max_removed_fraction: float = 1.0,
 ) -> AttackHistory:
     '''Randomly remove nodes from a graph copy and record each attack step.'''
 
     initial_node_count = graph.number_of_nodes()
     working_graph = graph.copy()
     history : AttackHistory = []
+
+    if (max_removed_fraction < 0.0) or (max_removed_fraction > 1.0):
+        raise ValueError("max_removed_fraction must be between 0.0 to 1.0.")
 
     if initial_node_count == 0:
         return history
@@ -128,7 +132,9 @@ def simulate_random_node_failure(
 
     rng = random.Random(seed)
 
-    while working_graph.number_of_nodes() > 0:
+    max_removed_count = int(initial_node_count * max_removed_fraction)
+
+    while initial_node_count - working_graph.number_of_nodes() < max_removed_count:
         removed_node = rng.choice(list(working_graph.nodes))
         working_graph.remove_node(removed_node)
 
@@ -148,6 +154,7 @@ def simulate_random_node_failure(
 def simulate_random_edge_failure(
     graph: nx.Graph,
     seed: int,
+    max_removed_fraction: float = 1.0,
 ) -> AttackHistory:
     '''Randomly remove edges from a graph copy and record each attack step.'''
 
@@ -155,6 +162,9 @@ def simulate_random_edge_failure(
     initial_edge_count = graph.number_of_edges()
     working_graph = graph.copy()
     history: AttackHistory = []
+
+    if max_removed_fraction < 0.0 or max_removed_fraction > 1.0:
+        raise ValueError("max_removed_fraction must be between 0.0 to 1.0.")
 
     if initial_edge_count == 0:
         return history
@@ -166,7 +176,9 @@ def simulate_random_edge_failure(
 
     rng = random.Random(seed)
 
-    while working_graph.number_of_edges() > 0:
+    max_removed_count = int(initial_edge_count * max_removed_fraction)
+
+    while initial_edge_count - working_graph.number_of_edges() < max_removed_count:
         removed_edge = rng.choice(list(working_graph.edges))
         working_graph.remove_edge(*removed_edge)
 

@@ -373,3 +373,80 @@ def test_write_experiment_rows_csv_rejects_empty_rows(tmp_path):
 
     with pytest.raises(ValueError):
         write_experiment_rows_csv(rows, output_path)
+
+def test_random_node_failure_respects_max_removed_fraction():
+
+    graph = nx.path_graph(10)
+
+    history = simulate_random_node_failure(
+        graph,
+        seed=42,
+        max_removed_fraction=0.5,
+    )
+
+    assert history[len(history) - 1]['removed_count'] == 5
+    assert history[len(history) - 1]['remaining_nodes'] == 5
+    assert history[len(history) - 1]['removed_fraction'] == 0.5
+
+    assert len(history) == 6
+
+def test_random_node_failure_zero_max_fraction_removes_nothing():
+
+    graph = nx.path_graph(10)
+
+    history = simulate_random_node_failure(
+        graph,
+        seed=42,
+        max_removed_fraction=0.0,
+    )
+
+    assert len(history) == 1
+
+    assert history[0]["removed_count"] == 0
+    assert history[0]["removed_fraction"] == 0.0
+    assert history[0]["remaining_nodes"] == 10
+    assert history[0]["removed_item"] is None
+
+def test_random_node_failure_rejects_invalid_max_removed_fraction():
+
+    graph = nx.path_graph(10)
+
+    with pytest.raises(ValueError):
+        simulate_random_node_failure(graph, seed=42, max_removed_fraction=-0.1)
+
+    with pytest.raises(ValueError):
+        simulate_random_node_failure(graph, seed=42, max_removed_fraction=1.1)
+
+def test_random_edge_failure_respects_max_removed_fraction():
+
+    graph = nx.path_graph(11)
+
+    history = simulate_random_edge_failure(graph, seed=42, max_removed_fraction=0.5)
+
+    assert history[len(history) - 1]["removed_count"] == 5
+    assert history[len(history) - 1]["remaining_edges"] == 5
+    assert history[len(history) - 1]["removed_fraction"] == 0.5
+
+    assert len(history) == 6
+
+def test_random_edge_failure_zero_max_fraction_removes_nothing():
+
+    graph = nx.path_graph(11)
+
+    history = simulate_random_edge_failure(graph, seed=42, max_removed_fraction=0.0)
+    assert len(history) == 1
+    
+    assert history[0]["removed_count"] == 0
+    assert history[0]["remaining_edges"] == 10
+    assert history[0]["removed_fraction"] == 0.0
+    assert history[0]["removed_item"] is None
+
+def test_random_edge_failure_rejects_invalid_max_removed_fraction():
+
+    graph = nx.path_graph(11)
+
+    with pytest.raises(ValueError):
+        simulate_random_edge_failure(graph, seed=42, max_removed_fraction=-0.1)
+
+    with pytest.raises(ValueError):
+        simulate_random_edge_failure(graph, seed=42, max_removed_fraction=1.1)
