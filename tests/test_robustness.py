@@ -10,6 +10,7 @@ from src.results import build_experiment_row
 from src.cayley_graph import create_cyclic_cayley_graph
 from src.results import build_experiment_rows
 from src.results import write_experiment_rows_csv
+from src.robustness import simulate_hop_localized_node_failure
 
 def test_measure_attack_step_connected_graph():
 
@@ -500,3 +501,95 @@ def test_build_experiment_row_preserves_algebraic_connectivity():
     )
 
     assert row["algebraic_connectivity"] == step["algebraic_connectivity"]
+
+def test_hop_localized_node_failure_removes_all_nodes():
+
+    graph = nx.path_graph(5)
+
+    history = simulate_hop_localized_node_failure(graph, seed=42)
+
+    assert len(history) == 6
+    assert history[5]['removed_count'] == 5
+    assert history[5]["remaining_nodes"] == 0
+    assert history[5]['removed_fraction'] == 1.0
+
+def test_hop_localized_node_failure_respects_max_removed_fraction():
+
+    graph = nx.path_graph(10)
+
+    history = simulate_hop_localized_node_failure(graph, seed=42, max_removed_fraction=0.5)
+
+    assert len(history) == 6
+    assert history[5]['removed_count'] == 5
+    assert history[5]['remaining_nodes'] == 5
+    assert history[5]['removed_fraction'] == 0.5
+
+def test_hop_localized_node_failure_zero_max_fraction_removes_nothing():
+
+    graph = nx.path_graph(10)
+
+    history = simulate_hop_localized_node_failure(graph, seed=42, max_removed_fraction=0.0)
+
+    assert len(history) == 1
+    assert history[0]['removed_count'] == 0
+    assert history[0]['remaining_nodes'] == 10
+    assert history[0]['removed_fraction'] == 0.0
+    assert history[0]['removed_item'] is None
+
+def test_hop_localized_node_failure_rejects_invalid_max_removed_fraction():
+
+    graph = nx.path_graph(10)
+
+    with pytest.raises(ValueError):
+        simulate_hop_localized_node_failure(graph, seed=42, max_removed_fraction=-0.1)
+
+    with pytest.raises(ValueError):
+        simulate_hop_localized_node_failure(graph, seed=42, max_removed_fraction=1.1)
+
+def test_hop_localized_node_failure_rejects_disconnected_graph():
+
+    graph = nx.path_graph(2)
+    graph.add_node(2)
+
+    with pytest.raises(ValueError):
+        simulate_hop_localized_node_failure(graph, seed=42)
+
+def test_hop_localized_node_failure_empty_graph_returns_empty_history():
+
+    graph = nx.Graph()
+
+    history = simulate_hop_localized_node_failure(graph, seed=42)
+
+    assert history == []
+
+def test_hop_localized_node_failure_is_reproducible_with_same_seed():
+
+    n = 10
+    generators = {-1, 1}
+
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    history1 = simulate_hop_localized_node_failure(graph, seed=42)
+    history2 = simulate_hop_localized_node_failure(graph, seed=42)
+
+    for i in range(1, len(history1)):
+        assert history1[i]['removed_item'] == history2[i]['removed_item']
+
+def test_hop_localized_node_failure_removes_nodes_in_nondecreasing_hop_distance():
+
+    n = 10
+    generators = {-1, 1}
+
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    history = simulate_hop_localized_node_failure(graph, seed=42)
+
+    start_node = history[1]['removed_item']
+
+    path_length = nx.single_source_shortest_path_length(graph, start_node)
+
+    for i in range(1, len(history) - 1):
+        length1 = path_length[history[i]['removed_item']]
+        length2 = path_length[history[i + 1]['removed_item']]
+
+        assert length1 <= length2

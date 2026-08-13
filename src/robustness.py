@@ -199,3 +199,79 @@ def simulate_random_edge_failure(
         history.append(step)
 
     return history
+
+def simulate_hop_localized_node_failure(
+    graph: nx.Graph,
+    seed: int,
+    max_removed_fraction: float = 1.0,
+) -> AttackHistory:
+    '''Simulate hop-localized node failures on a connected graph.
+
+    The removal order is determined before the attack using hop distance
+    from a seed-selected start node in the original graph. Nodes at the
+    same hop distance are shuffled reproducibly using the given seed.
+
+    The input graph must be connected.
+    '''
+    
+    working_graph = graph.copy()
+    initial_node_count = graph.number_of_nodes()
+    history: AttackHistory = []
+
+    if max_removed_fraction < 0.0 or max_removed_fraction > 1.0:
+        raise ValueError("max_removed_fraction must be between 0 to 1.")
+
+    if initial_node_count == 0:
+        return history
+
+    if not nx.is_connected(graph):
+        raise ValueError("graph must be connected.")
+
+    checkpoint_counts = build_path_metric_checkpoints(initial_node_count)
+
+    initial_step = measure_attack_step(working_graph, initial_node_count, removed_fraction=0.0, removed_count=0, is_path_metric_checkpoint=True)
+    history.append(initial_step)
+
+    rng = random.Random(seed)
+    start_node = rng.choice(list(working_graph.nodes))
+
+    path_length = nx.single_source_shortest_path_length(working_graph, start_node)
+    length_dict = {}
+    removal_order = []
+
+    for node, length in path_length.items():
+        if length in length_dict:
+            length_dict[length].append(node)
+
+        else:
+            length_dict[length] = []
+            length_dict[length].append(node)
+
+    for key in sorted(length_dict):
+        rng.shuffle(length_dict[key])
+
+    for key in sorted(length_dict):
+        for index in range(len(length_dict[key])):
+            removal_order.append(length_dict[key][index])
+
+    max_removed_count = int(initial_node_count * max_removed_fraction)
+
+    removed_count = 0
+
+    while initial_node_count - working_graph.number_of_nodes() < max_removed_count:
+        removed_node = removal_order[removed_count]
+        working_graph.remove_node(removed_node)
+
+        removed_count += 1
+
+        removed_fraction = removed_count / initial_node_count
+
+        is_path_metric_checkpoint = removed_count in checkpoint_counts
+
+        removed_item = removed_node
+
+        step = measure_attack_step(working_graph, initial_node_count, removed_fraction, removed_count, is_path_metric_checkpoint, removed_item)
+
+        history.append(step)
+
+    return history
