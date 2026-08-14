@@ -275,3 +275,79 @@ def simulate_hop_localized_node_failure(
         history.append(step)
 
     return history
+
+def simulate_adaptive_betweenness_node_attack(
+    graph: nx.Graph,
+    seed: int, 
+    max_removed_fraction: float = 1.0,
+    k: int | None = None, 
+) -> AttackHistory:
+
+    working_graph = graph.copy()
+    initial_node_count = graph.number_of_nodes()
+    history: AttackHistory = []
+
+    if max_removed_fraction < 0.0 or max_removed_fraction > 1.0:
+        raise ValueError("max_removed_fraction must be between 0 to 1.")
+
+    if k is not None:
+        if k <= 0:
+            raise ValueError("k must be bigger than 0.")
+
+    if initial_node_count == 0:
+        return history
+
+    checkpoint_counts = build_path_metric_checkpoints(initial_node_count)
+
+
+    initial_step = measure_attack_step(working_graph, initial_node_count, removed_fraction=0.0, removed_count=0, is_path_metric_checkpoint=True)
+    history.append(initial_step)
+
+    rng = random.Random(seed)
+
+    max_removed_count = int(initial_node_count * max_removed_fraction)
+    removed_count = 0
+
+    while initial_node_count - working_graph.number_of_nodes() < max_removed_count:
+        if k is None:
+            effective_k = None
+
+        else:
+            if working_graph.number_of_nodes() < k:
+                effective_k = working_graph.number_of_nodes()
+
+            else:
+                effective_k = k
+
+        centrality = nx.betweenness_centrality(
+            working_graph,
+            k=effective_k,
+            seed=seed,
+        )
+
+        max_value = 0.0
+        max_value_node = []
+
+        for _, betweenness in centrality.items():
+            if betweenness > max_value:
+                max_value = betweenness
+
+        for node, betweenness in centrality.items():
+            if abs(max_value - betweenness) < 1e-9:
+                max_value_node.append(node)
+
+        removed_item = rng.choice(max_value_node)
+
+        working_graph.remove_node(removed_item)
+
+        removed_count += 1
+
+        removed_fraction = removed_count / initial_node_count
+
+        is_path_metric_checkpoint = removed_count in checkpoint_counts
+
+        step = measure_attack_step(working_graph, initial_node_count, removed_fraction, removed_count, is_path_metric_checkpoint, removed_item)
+
+        history.append(step)
+
+    return history

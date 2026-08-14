@@ -11,6 +11,7 @@ from src.cayley_graph import create_cyclic_cayley_graph
 from src.results import build_experiment_rows
 from src.results import write_experiment_rows_csv
 from src.robustness import simulate_hop_localized_node_failure
+from src.robustness import simulate_adaptive_betweenness_node_attack
 
 def test_measure_attack_step_connected_graph():
 
