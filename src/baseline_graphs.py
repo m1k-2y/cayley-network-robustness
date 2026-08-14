@@ -57,7 +57,7 @@ def create_watts_strogatz_graph(
     if not (0 <= p and p <= 1):
         raise ValueError("p must be between 0 to 1.")
     
-    graph = nx.watts_strogatz_graph(n=n, k=k, p=p, seed=seed)
+    graph = nx.connected_watts_strogatz_graph(n=n, k=k, p=p, seed=seed)
 
     return graph
 

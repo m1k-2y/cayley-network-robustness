@@ -16,6 +16,9 @@ def run_single_experiment(
 
 ) -> list[ExperimentRow]:
 
+    if attack_seed is None:
+        raise ValueError("attack requires a seed.")
+
     graph = build_graph(graph_family, n, seed=graph_seed)
 
     if attack_type == "random_node":
@@ -43,7 +46,7 @@ def run_single_experiment(
         run_id=run_id,
         graph_family=graph_family,
         n=n,
-        graph_seed=graph_seed,
+        graph_seed=graph.graph["seed"],
         attack_type=attack_type,
         attack_seed=attack_seed,
         removal_type=removal_type,

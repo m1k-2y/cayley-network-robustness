@@ -30,6 +30,10 @@ def build_graph(
     if n not in SUPPORTED_NODE_COUNTS:
         raise ValueError("n must be in SUPPORTED_NODE_COUNTS")
 
+    if name == "random_regular" or name == "watts_strogatz":
+        if seed is None:
+            raise ValueError("stochastic graph requires a seed.")
+
     if name == "cyclic_local":
         generators = {1, -1, 2, -2}
 
@@ -75,5 +79,19 @@ def build_graph(
         graph.graph["seed"] = None
     
     graph.graph.setdefault("edge_classes", ())
+
+    if graph.number_of_nodes() != n:
+        raise ValueError("generated graph has unexpected node count.")
+
+    if graph.number_of_edges() != 2 * n:
+        raise ValueError("generated graph has unexpected edge count.")
+
+    if not nx.is_connected(graph):
+        raise ValueError("generated graph must be connected.")
+
+    if name != "watts_strogatz":
+        for _, degree in graph.degree():
+            if degree != 4:
+                raise ValueError("generated graph must be 4-regular.")
 
     return graph

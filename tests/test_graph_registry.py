@@ -1,5 +1,8 @@
 from src.graph_registry import build_graph
+from src.graph_registry import SUPPORTED_GRAPH_NAMES
+from src.graph_registry import SUPPORTED_NODE_COUNTS
 import pytest
+import networkx as nx
 
 def test_build_graph_creates_all_supported_families_at_256():
 
@@ -187,3 +190,29 @@ def test_non_structural_families_have_no_edge_classes():
     for name in test_graph:
         graph = build_graph(name, n, seed)
         assert graph.graph["edge_classes"] == ()
+
+def test_supported_graph_families_are_connected():
+
+    for graph_name in SUPPORTED_GRAPH_NAMES:
+        for n in SUPPORTED_NODE_COUNTS:
+            graph = build_graph(
+                name=graph_name,
+                n=n,
+                seed=42,
+            )
+
+            assert nx.is_connected(graph)
+
+def test_stochastic_graphs_require_seed():
+
+    with pytest.raises(ValueError):
+        build_graph(
+            name="random_regular",
+            n=256,
+        )
+
+    with pytest.raises(ValueError):
+        build_graph(
+            name="watts_strogatz",
+            n=256,
+        )
