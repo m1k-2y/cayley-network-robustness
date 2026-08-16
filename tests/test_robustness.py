@@ -594,3 +594,113 @@ def test_hop_localized_node_failure_removes_nodes_in_nondecreasing_hop_distance(
         length2 = path_length[history[i + 1]['removed_item']]
 
         assert length1 <= length2
+
+def test_adaptive_betweenness_attack_removes_highest_betweenness_node_first():
+
+    graph = nx.path_graph(5)
+
+    history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=0.2)
+
+    assert len(history) == 2
+    assert history[1]["removed_item"] == 2
+    assert history[1]["removed_count"] == 1
+    assert history[1]["remaining_nodes"] == 4
+
+def test_adaptive_betweenness_attack_recomputes_centrality_after_each_removal():
+
+    graph = nx.Graph()
+
+    graph.add_edges_from([
+        (0, 4),
+        (0, 5),
+        (3, 4),
+        (1, 3),
+        (2, 3)
+    ])
+
+    history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=1 / 3)
+
+    assert history[1]["removed_item"] == 3
+    assert history[2]["removed_item"] == 0
+
+def test_adaptive_betweenness_attack_is_reproducible_with_same_seed():
+
+    graph1 = create_cyclic_cayley_graph(n=6, generators={-1, 1})
+    graph2 = create_cyclic_cayley_graph(n=6, generators={-1, 1})
+
+    history1 = simulate_adaptive_betweenness_node_attack(graph1, seed=42, max_removed_fraction=1 / 6)
+    history2 = simulate_adaptive_betweenness_node_attack(graph2, seed=42, max_removed_fraction=1 / 6)
+
+    assert history1[1]["removed_item"] == history2[1]["removed_item"]
+
+def test_adaptive_betweenness_attack_respects_max_removed_fraction():
+
+    graph = nx.path_graph(10)
+
+    history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=0.5)
+
+    assert len(history) == 6
+    assert history[5]["remaining_nodes"] == 5
+    assert history[5]["removed_count"] == 5
+    assert history[5]["removed_fraction"] == 0.5
+
+def test_adaptive_betweenness_attack_zero_max_fraction_removes_nothing():
+
+    graph = nx.path_graph(10)
+
+    history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=0.0)
+
+    assert len(history) == 1
+    assert history[0]["remaining_nodes"] == 10
+    assert history[0]["removed_count"] == 0
+    assert history[0]["removed_fraction"] == 0.0
+
+def test_adaptive_betweenness_attack_rejects_invalid_max_removed_fraction():
+
+    graph = nx.path_graph(10)
+
+    with pytest.raises(ValueError):
+        simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=-0.1)
+
+    with pytest.raises(ValueError):
+        simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=1.1)
+
+def test_adaptive_betweenness_attack_rejects_invalid_k():
+
+    graph = nx.path_graph(10)
+
+    with pytest.raises(ValueError):
+        simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=0.0, k=0)
+
+    with pytest.raises(ValueError):
+        simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=0.0, k=-1)
+
+def test_adaptive_betweenness_attack_with_k_is_reproducible():
+
+    graph1 = nx.path_graph(10)
+    graph2 = nx.path_graph(10)
+
+    history1 = simulate_adaptive_betweenness_node_attack(graph1, seed=42, max_removed_fraction=1 / 5, k=3)
+    history2 = simulate_adaptive_betweenness_node_attack(graph2, seed=42, max_removed_fraction=1 / 5, k=3)
+
+    for i in range(1, len(history1)):
+        assert history1[i]["removed_item"] == history2[i]["removed_item"]
+
+def test_adaptive_betweenness_attack_caps_k_at_remaining_node_count():
+
+    graph = nx.path_graph(5)
+
+    history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=1.0, k=64)
+
+    assert len(history) == 6
+    assert history[5]["remaining_nodes"] == 0
+    assert history[5]["removed_count"] == 5
+    assert history[5]["removed_fraction"] == 1.0
+
+def test_adaptive_betweenness_attack_empty_graph_returns_empty_history():
+
+    graph = nx.Graph()
+
+    history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=1.0)
+
+    assert history == []
