@@ -12,6 +12,9 @@ from src.results import build_experiment_rows
 from src.results import write_experiment_rows_csv
 from src.robustness import simulate_hop_localized_node_failure
 from src.robustness import simulate_adaptive_betweenness_node_attack
+from src.robustness import simulate_generator_class_edge_failure
+from src.baseline_graphs import create_random_regular_graph
+from src.graph_registry import build_graph
 
 def test_measure_attack_step_connected_graph():
 
@@ -704,3 +707,105 @@ def test_adaptive_betweenness_attack_empty_graph_returns_empty_history():
     history = simulate_adaptive_betweenness_node_attack(graph, seed=42, max_removed_fraction=1.0)
 
     assert history == []
+
+def test_generator_class_edge_failure_removes_target_class_edges():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+
+    graph = create_cyclic_cayley_graph(n, generators)   
+
+    history = simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=1.0)
+
+    assert history[10]["removed_count"] == 10
+    assert history[10]["remaining_edges"] == 10
+
+def test_generator_class_edge_failure_removes_only_target_class():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    history = simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=1.0)
+
+    removed_edges = []
+
+    for i in range(1, len(history)):
+        removed_edges.append(tuple(sorted((history[i]["removed_item"]))))
+
+    step_1_edges = []
+
+    for (u, v, data) in graph.edges(data=True):
+        if data["edge_class"] == "step_1":
+            step_1_edges.append(tuple(sorted((u, v))))
+
+    assert set(step_1_edges) == set(removed_edges)
+
+def test_generator_class_edge_failure_respects_target_class_removal_fraction():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    history = simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=0.5)
+
+    assert history[-1]["removed_count"] == 5
+
+def test_generator_class_edge_failure_zero_fraction_returns_initial_step_only():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    history = simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=0.0)
+
+    assert len(history) == 1
+    assert history[0]["removed_count"] == 0
+    assert history[0]["removed_fraction"] == 0.0
+    assert history[0]["remaining_edges"] == 20
+
+def test_generator_class_edge_failure_rejects_invalid_fraction():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+    
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    with pytest.raises(ValueError):
+        simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=-0.1)
+
+    with pytest.raises(ValueError):
+        simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=1.1)
+
+def test_generator_class_edge_failure_rejects_invalid_target_class():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+        
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    with pytest.raises(ValueError):
+        simulate_generator_class_edge_failure(graph, seed=42, target_class="horizontal", target_class_removal_fraction=0.5)
+
+def test_generator_class_edge_failure_is_reproducible_with_same_seed():
+
+    n = 10
+    generators = {-1, 1, -2, 2}
+            
+    graph = create_cyclic_cayley_graph(n, generators)
+
+    history1 = simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=0.5)
+    history2 = simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=0.5)
+
+    for i in range(1, len(history1)):
+        assert tuple(sorted(history1[i]["removed_item"])) == tuple(sorted(history2[i]["removed_item"]))
+
+def test_generator_class_edge_failure_rejects_graph_without_edge_classes():
+
+    graph = build_graph("random_regular", n=256, seed=42)
+
+    with pytest.raises(ValueError):
+        simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=0.5)

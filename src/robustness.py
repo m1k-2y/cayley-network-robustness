@@ -351,3 +351,56 @@ def simulate_adaptive_betweenness_node_attack(
         history.append(step)
 
     return history
+
+def simulate_generator_class_edge_failure(
+    graph: nx.Graph,
+    seed: int,
+    target_class: str,
+    target_class_removal_fraction: float,
+) -> AttackHistory:
+
+    if target_class_removal_fraction < 0.0 or target_class_removal_fraction > 1.0:
+        raise ValueError("target_class_removal_fraction must be between 0.0 to 1.0.")
+
+    if target_class not in graph.graph["edge_classes"]:
+        raise ValueError("Invalid target_class.")
+
+    initial_node_count = graph.number_of_nodes()
+    initial_edge_count = graph.number_of_edges()
+
+    target_edges = []
+    for (u, v, data) in graph.edges(data=True):
+        if data["edge_class"] == target_class:
+            target_edges.append((u, v))      
+
+    working_graph = graph.copy()
+    history: AttackHistory = []
+
+    initial_step = measure_attack_step(working_graph, initial_node_count, removed_fraction=0.0, removed_count=0, is_path_metric_checkpoint=True)
+    history.append(initial_step)
+
+    checkpoint_counts = build_path_metric_checkpoints(initial_edge_count)
+
+    rng = random.Random(seed)
+
+    max_removed_count = int(target_class_removal_fraction * len(target_edges))
+    removed_count = 0
+
+    while removed_count < max_removed_count:
+        removed_item = rng.choice(target_edges)
+
+        working_graph.remove_edge(*removed_item)
+
+        target_edges.remove(removed_item)
+
+        removed_count += 1
+
+        removed_fraction = removed_count / initial_edge_count
+
+        is_path_metric_checkpoint = removed_count in checkpoint_counts
+
+        step = measure_attack_step(working_graph, initial_node_count, removed_fraction, removed_count, is_path_metric_checkpoint, removed_item)
+
+        history.append(step)
+
+    return history
