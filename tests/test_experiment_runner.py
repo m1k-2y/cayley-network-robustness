@@ -118,3 +118,83 @@ def test_run_single_experiment_requires_attack_seed():
             attack_seed=None,
             max_removed_fraction=0.01,
         )
+
+def test_run_single_experiment_adaptive_betweenness():
+
+    rows = run_single_experiment(
+        run_id="test_run",
+        graph_family="cyclic_local",
+        n=256,
+        graph_seed=None,
+        attack_type="adaptive_betweenness",
+        attack_seed=42,
+        max_removed_fraction=0.01,
+        k=8
+    )
+
+    assert rows[0]["run_id"] == "test_run"
+    assert rows[0]["graph_family"] == "cyclic_local"
+    assert rows[0]["n"] == 256
+    assert rows[0]["graph_seed"] is None
+    assert rows[0]["attack_type"] == "adaptive_betweenness"
+    assert rows[0]["attack_seed"] == 42
+    assert rows[0]["removal_type"] == "node"
+    assert rows[0]["target_class"] is None
+    assert rows[0]["target_class_removal_fraction"] is None
+
+    assert len(rows) == 3
+    assert rows[-1]["remaining_nodes"] == 254
+    assert rows[-1]["removed_count"] == 2
+
+def test_run_single_experiment_generator_class():
+
+    rows = run_single_experiment(
+        run_id="test_run",
+        graph_family="cyclic_local",
+        n=256, 
+        graph_seed=None,
+        attack_type="generator_class",
+        attack_seed=42,
+        target_class="step_1",
+        target_class_removal_fraction=0.01,
+    )
+
+    assert rows[0]["run_id"] == "test_run"
+    assert rows[0]["graph_family"] == "cyclic_local"
+    assert rows[0]["n"] == 256
+    assert rows[0]["graph_seed"] is None
+    assert rows[0]["attack_type"] == "generator_class"
+    assert rows[0]["attack_seed"] == 42
+    assert rows[0]["removal_type"] == "edge"
+    assert rows[0]["target_class"] == "step_1"
+    assert rows[0]["target_class_removal_fraction"] == 0.01
+
+    assert len(rows) == 3
+    assert rows[-1]["remaining_edges"] == 510
+    assert rows[-1]["removed_count"] == 2
+
+def test_run_single_experiment_generator_class_requires_target_parameters():
+
+    with pytest.raises(ValueError):
+        run_single_experiment(
+            run_id="test_run",
+            graph_family="cyclic_local",
+            n=256,
+            graph_seed=None,
+            attack_type="generator_class",
+            attack_seed=42,
+            target_class=None,
+            target_class_removal_fraction=0.5,
+        )
+
+    with pytest.raises(ValueError):
+        run_single_experiment(
+            run_id="test_run",
+            graph_family="cyclic_local",
+            n=256,
+            graph_seed=None,
+            attack_type="generator_class",
+            attack_seed=42,
+            target_class="step_1",
+            target_class_removal_fraction=None,
+        )
