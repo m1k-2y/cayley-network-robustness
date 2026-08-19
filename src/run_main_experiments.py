@@ -13,7 +13,7 @@ def run_experiment_slice(
     if attack_type == "generator_class" and (graph_family == "watts_strogatz" or graph_family == "random_regular"):
         return
 
-    run_id_prefix = "main_n"
+    run_id_prefix = "main"
 
     if attack_type in ("random_node", "random_edge", "generator_class", "hop_localized"):
         max_removed_fraction = 1.0
