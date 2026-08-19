@@ -82,7 +82,10 @@ def compute_algebraic_connectivity(
         return 0.0
 
     else:
-        return nx.algebraic_connectivity(graph)
+        return nx.algebraic_connectivity(
+            graph,
+            method="tracemin_lu",
+        )
 
 def compute_basic_metrics(
     graph: nx.Graph,
