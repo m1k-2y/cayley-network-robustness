@@ -25,6 +25,7 @@ class ExperimentRow(TypedDict):
     diameter_lcc: int | None
     average_shortest_path_length_lcc: float | None
     global_efficiency: float | None
+    initial_normalized_global_efficiency: float | None
     algebraic_connectivity: float | None
     runtime_seconds: float | None
 
@@ -50,6 +51,7 @@ EXPERIMENT_ROW_FIELDS = (
     "diameter_lcc",
     "average_shortest_path_length_lcc",
     "global_efficiency",
+    "initial_normalized_global_efficiency",
     "algebraic_connectivity",
     "runtime_seconds",
 )
@@ -90,6 +92,7 @@ def build_experiment_row(
         "diameter_lcc": step["diameter_lcc"],
         "average_shortest_path_length_lcc": step["average_shortest_path_length_lcc"],
         "global_efficiency": step["global_efficiency"],
+        "initial_normalized_global_efficiency": step["initial_normalized_global_efficiency"],
         "algebraic_connectivity": step["algebraic_connectivity"],
         "runtime_seconds": step["runtime_seconds"],
     }

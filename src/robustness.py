@@ -22,6 +22,7 @@ class AttackStep(TypedDict):
     diameter_lcc: int | None
     average_shortest_path_length_lcc: float | None
     global_efficiency: float | None
+    initial_normalized_global_efficiency: float | None
     runtime_seconds: float
     algebraic_connectivity: float | None
 
@@ -64,6 +65,8 @@ def measure_attack_step(
 
     component_count = len(component_sizes)
 
+    remaining_node_count = graph.number_of_nodes()
+
     if component_count >= 2:
         largest_component_size = component_sizes[0]
         second_largest_component_size = component_sizes[1]
@@ -83,10 +86,22 @@ def measure_attack_step(
         diameter_lcc, average_shortest_path_length_lcc, global_efficiency = compute_shortest_path_metrics(graph)
         algebraic_connectivity = compute_algebraic_connectivity(graph)
 
+        if initial_node_count > 1:
+            initial_normalized_global_efficiency = (
+                global_efficiency
+                * remaining_node_count
+                * (remaining_node_count - 1)
+                / (initial_node_count * (initial_node_count - 1))
+            )
+
+        else:
+            initial_normalized_global_efficiency = 0.0
+
     else:
         diameter_lcc = None
         average_shortest_path_length_lcc = None
         global_efficiency = None
+        initial_normalized_global_efficiency = None
         algebraic_connectivity = None
 
     end = time.perf_counter()
@@ -107,6 +122,7 @@ def measure_attack_step(
             "diameter_lcc": diameter_lcc,
             "average_shortest_path_length_lcc": average_shortest_path_length_lcc,
             "global_efficiency": global_efficiency,
+            "initial_normalized_global_efficiency": initial_normalized_global_efficiency,
             "runtime_seconds": runtime_seconds,
             "algebraic_connectivity": algebraic_connectivity,
         }

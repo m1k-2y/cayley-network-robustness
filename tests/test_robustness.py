@@ -809,3 +809,115 @@ def test_generator_class_edge_failure_rejects_graph_without_edge_classes():
 
     with pytest.raises(ValueError):
         simulate_generator_class_edge_failure(graph, seed=42, target_class="step_1", target_class_removal_fraction=0.5)
+
+def test_initial_normalized_global_efficiency_equals_global_efficiency_initially():
+
+    graph = nx.path_graph(4)
+
+    step = measure_attack_step(
+        graph,
+        initial_node_count=4,
+        removed_fraction=0.0,
+        removed_count=0,
+        is_path_metric_checkpoint=True,
+    )
+
+    assert step["initial_normalized_global_efficiency"] == pytest.approx(
+        step["global_efficiency"]
+    )
+
+def test_initial_normalized_global_efficiency_uses_initial_node_count():
+
+    graph = nx.path_graph(4)
+    graph.remove_node(3)
+
+    step = measure_attack_step(
+        graph,
+        initial_node_count=4,
+        removed_fraction=0.25,
+        removed_count=1,
+        is_path_metric_checkpoint=True,
+    )
+
+    expected = (
+        step["global_efficiency"]
+        * 3
+        * 2
+        / (4 * 3)
+    )
+
+    assert step["initial_normalized_global_efficiency"] == pytest.approx(expected)
+
+def test_initial_normalized_global_efficiency_equals_global_efficiency_for_edge_removal():
+
+    graph = nx.cycle_graph(4)
+    graph.remove_edge(0, 1)
+
+    step = measure_attack_step(
+        graph,
+        initial_node_count=4,
+        removed_fraction=0.25,
+        removed_count=1,
+        is_path_metric_checkpoint=True,
+    )
+
+    assert step["initial_normalized_global_efficiency"] == pytest.approx(
+        step["global_efficiency"]
+    )
+
+def test_initial_normalized_global_efficiency_is_none_outside_checkpoint():
+
+    graph = nx.path_graph(4)
+
+    step = measure_attack_step(
+        graph,
+        initial_node_count=4,
+        removed_fraction=0.25,
+        removed_count=1,
+        is_path_metric_checkpoint=False,
+    )
+
+    assert step["global_efficiency"] is None
+    assert step["initial_normalized_global_efficiency"] is None
+
+def test_experiment_row_fields_include_initial_normalized_global_efficiency():
+
+    assert "initial_normalized_global_efficiency" in EXPERIMENT_ROW_FIELDS
+
+def test_build_experiment_row_copies_initial_normalized_global_efficiency():
+
+    step = {
+        "removed_fraction": 0.0,
+        "removed_count": 0,
+        "remaining_nodes": 4,
+        "remaining_edges": 3,
+        "component_count": 1,
+        "largest_component_size": 4,
+        "largest_component_ratio": 1.0,
+        "second_largest_component_size": 0,
+        "second_largest_component_ratio": 0.0,
+        "removed_item": None,
+        "diameter_lcc": 3,
+        "average_shortest_path_length_lcc": 1.6666666666666667,
+        "global_efficiency": 0.7222222222222222,
+        "initial_normalized_global_efficiency": 0.7222222222222222,
+        "runtime_seconds": 0.01,
+        "algebraic_connectivity": 0.585786437626905,
+    }
+
+    row = build_experiment_row(
+        run_id="test",
+        graph_family="test_graph",
+        n=4,
+        graph_seed=None,
+        attack_type="random_node",
+        attack_seed=42,
+        removal_type="node",
+        target_class=None,
+        target_class_removal_fraction=None,
+        step=step,
+    )
+
+    assert row["initial_normalized_global_efficiency"] == (
+        step["initial_normalized_global_efficiency"]
+    )
