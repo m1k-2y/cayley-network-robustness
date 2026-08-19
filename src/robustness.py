@@ -322,7 +322,7 @@ def simulate_adaptive_betweenness_node_attack(
         centrality = nx.betweenness_centrality(
             working_graph,
             k=effective_k,
-            seed=seed,
+            seed=rng,
         )
 
         max_value = 0.0
